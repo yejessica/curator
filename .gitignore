@@ -1,0 +1,79 @@
+# Node modules in frontend
+frontend/node_modules/
+
+# Next.js build output in frontend
+frontend/.next/
+frontend/out/
+
+# Logs in frontend
+frontend/logs/
+frontend/*.log
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# dotenv environment variables in frontend
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+
+# Next.js cache in frontend
+frontend/.cache/
+
+# Coverage reports in frontend
+frontend/coverage/
+
+# OS-specific and editor-specific files in frontend and root
+frontend/.DS_Store
+frontend/Thumbs.db
+frontend/.vscode/
+frontend/.idea/
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Other
+frontend/*.swp
+frontend/*.swo
+frontend/*.bak
+
+
+# Python cache files
+backend/__pycache__/
+backend/*.py[cod]
+backend/**/*.py[cod]
+
+# Environment variables and secrets
+backend/.env
+backend/.flaskenv
+
+# Instance folder (for Flask app configurations)
+backend/instance/
+
+# Flask cache and logs
+backend/.pytest_cache/
+backend/.coverage
+backend/*.log
+backend/coverage/
+backend/htmlcov/
+
+# Virtual environment
+backend/venv/
+backend/.venv/
+
+# Jupyter Notebook checkpoints (if applicable)
+backend/.ipynb_checkpoints/
+
+# OS-specific files
+backend/.DS_Store
+backend/Thumbs.db
+
+# Editor-specific files
+backend/.vscode/
+backend/.idea/
+
+# Other
+backend/*.swp
+backend/*.swo
+backend/*.bak
