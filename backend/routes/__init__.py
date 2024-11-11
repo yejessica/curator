@@ -1,4 +1,5 @@
-from .users import user_bp
+# from .users import user_bp
+from .collections import collections_bp
 
 # List of all blueprints
-blueprints = [user_bp]
+blueprints = [collections_bp]
