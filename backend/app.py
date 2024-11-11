@@ -18,7 +18,7 @@ app.config['DB_ENGINE'] = create_engine(DATABASEURI)
 
 engine = create_engine(DATABASEURI)
 for bp in blueprints:
-    app.register_blueprint(bp)
+   app.register_blueprint(bp)
 
 
 @app.before_request
