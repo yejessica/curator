@@ -40,6 +40,45 @@ def teardown_request(exception):
     except Exception as e:
         pass
 
+# Endpoint for user registration
+@app.route('/api/register', methods=['POST'])
+def register():
+    data = request.get_json()
+    email = data.get('email')
+    name = data.get('username')  # Using 'username' from the frontend as 'name'
+    password = data.get('password')
+
+    if not email or not name or not password:
+        return jsonify({"error": "All fields are required."}), 400
+
+    try:
+        # Check if the user already exists
+        existing_user = g.conn.execute(
+            text("SELECT * FROM Users WHERE email = :email"),
+            {"email": email}
+        ).fetchone()
+
+        if existing_user:
+            return jsonify({"error": "Email is already registered."}), 409
+
+        # Hash the password
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+        # Insert the new user into the database
+        g.conn.execute(
+            text("INSERT INTO Users (name, email, password) VALUES (:name, :email, :password)"),
+            {"name": name, "email": email, "password": hashed_password}
+        )
+
+        print(f"User {email} successfully registered.")
+        return jsonify({"message": "Registration successful!"}), 201
+
+    except Exception as e:
+        print(f"Error during registration: {e}")
+        return jsonify({"error": "An error occurred during registration."}), 500
+
+
+
 # Endpoint for login
 @app.route('/api/login', methods=['POST'])
 def login():
