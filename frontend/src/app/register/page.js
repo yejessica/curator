@@ -1,32 +1,34 @@
 "use client";
 
-import Link from 'next/link';
 import { useState } from 'react';
 
-export default function Login() {
+export default function Register() {
     const [email, setEmail] = useState('');
+    const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
+    const [successMessage, setSuccessMessage] = useState('');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setErrorMessage('');
+        setSuccessMessage('');
 
         try {
-            const response = await fetch('http://localhost:5000/api/login', {
+            const response = await fetch('http://localhost:5000/api/register', { // Updated URL
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password }),
+                body: JSON.stringify({ email, username, password }),
                 credentials: 'include'
-            });
+            });            
             const data = await response.json();
 
             if (!response.ok) {
-                setErrorMessage(data.error || 'Login failed.');
+                setErrorMessage(data.error || 'Registration failed.');
                 return;
             }
 
-            // Handle successful login (e.g., redirect or set session)
+            setSuccessMessage('Registration successful!');
         } catch (error) {
             setErrorMessage('An error occurred. Please try again.');
         }
@@ -35,8 +37,12 @@ export default function Login() {
     return (
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
             <div style={{ maxWidth: '400px', width: '100%', padding: '20px', border: '1px solid #ccc', borderRadius: '8px' }}>
-                <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Login</h2>
+                <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Register</h2>
                 <form onSubmit={handleSubmit}>
+                    {/* Display error message if it exists */}
+                    {errorMessage && (
+                        <p style={{ color: 'red', textAlign: 'center', marginBottom: '15px' }}>{errorMessage}</p>
+                    )}
                     <div style={{ marginBottom: '15px' }}>
                         <label htmlFor="email" style={{ display: 'block', marginBottom: '5px' }}>Email</label>
                         <input
@@ -44,6 +50,17 @@ export default function Login() {
                             id="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
+                            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+                            required
+                        />
+                    </div>
+                    <div style={{ marginBottom: '15px' }}>
+                        <label htmlFor="username" style={{ display: 'block', marginBottom: '5px' }}>Username</label>
+                        <input
+                            type="text"
+                            id="username"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
                             style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
                             required
                         />
@@ -60,12 +77,9 @@ export default function Login() {
                         />
                     </div>
                     <button type="submit" style={{ width: '100%', padding: '10px', backgroundColor: '#0070f3', color: 'white', border: 'none', borderRadius: '4px' }}>
-                        Login
+                        Register
                     </button>
                 </form>
-                <p style={{ textAlign: 'center', marginTop: '20px' }}>
-                    Don't have an account? <Link href="/register" style={{ color: '#0070f3' }}>Register here</Link>
-                </p>
             </div>
         </div>
     );

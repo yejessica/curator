@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, render_template, g, request
+from flask import Blueprint, jsonify, current_app, render_template, g
 from sqlalchemy import *
 
 collections_bp = Blueprint('collections', __name__)
@@ -15,6 +15,16 @@ def get_all_collections():
     return render_template("renderCollections.html", collections = collections)
 
 
+#Get all exhibits owned by a user
+@collections_bp.route('/collections/<int:user_id>', methods=['GET'])
+def get_user_collections(user_id):
+    result = g.conn.execute(text("""
+        SELECT * FROM Collections 
+        WHERE user_id = :user_id
+    """), {"user_id": user_id})
+    collections = [row._asdict() for row in result]
+    return render_template('renderCollections.html', collections=collections)
+
 # Gets all the exhibits from a Collection
 @collections_bp.route('/collections/getExhibits/<int:collection_id>', methods=['GET'])
 def get_collection_exhibits(collection_id):
@@ -24,37 +34,3 @@ def get_collection_exhibits(collection_id):
     """), {"collection_id": collection_id})
     exhibits = [row._asdict() for row in result]
     return render_template('renderCollections.html', collections=exhibits)
-
-# need to test, add an exhibit to collection.
-@collections_bp.route('/collections/addExhibit')
-def add_exhibit():
-    data = request.get_json()
-
-    insertSQL = """
-        INSERT INTO exhibits (title, height, width, xcoord, ycoord, exhibit_format, collection_id, user_id)
-        VALUES (%s, %i, %i, %i, %i, %s, %i, %i)
-    """
-    try: 
-        g.conn.execute(sql, (data['title'],data['height'],data['width'],data['xcoord'],data['ycoord'],data['exhibit_format'],data['collection_id'],data['user_id']))
-
-        return jsonify({'message': 'Exhibit added successfully'}), 201
-    except Exception as e:
-        g.conn.rollback()
-        return jsonify({'message': 'Error adding exhibit', 'error': str(e)}), 400
-    
-# adding a collection
-@collections_bp.route('/collections/addCollection')
-def add_collection():
-    data = request.get_json()
-
-    insertSQL = """
-        INSERT INTO collections (url, title, user_id)
-        VALUES (%s, %s, %i)
-    """
-    try: 
-        g.conn.execute(sql, (data['url'],data['title'],data['user_id']))
-
-        return jsonify({'message': 'Collection added successfully'}), 201
-    except Exception as e:
-        g.conn.rollback()
-        return jsonify({'message': 'Error adding collection', 'error': str(e)}), 400

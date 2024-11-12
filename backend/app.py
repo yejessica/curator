@@ -1,78 +1,99 @@
-from flask import Flask
-from flask import flash, redirect, render_template, request, session, abort, jsonify, g, redirect, Response
 import os
-from routes import blueprints
-from sqlalchemy import *
-from sqlalchemy.pool import NullPool
-
-
+from flask import Flask, request, jsonify, session, g
+from sqlalchemy import create_engine, text
+import bcrypt
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app, supports_credentials=True)
+
+# Use the provided secret key
+app.secret_key = b'4b629ea0a2f866fd344b0c8b2371c538d9ffab2283595e05d3cece580328fe1b'
+
 DB_USER = "jj3390"
 DB_PASSWORD = "quesadillas"
 DB_SERVER = "w4111.cisxo09blonu.us-east-1.rds.amazonaws.com"
-DATABASEURI = "postgresql://"+DB_USER+":"+DB_PASSWORD+"@"+DB_SERVER+"/w4111"
-
+DATABASEURI = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_SERVER}/w4111"
 
 app.config['DB_ENGINE'] = create_engine(DATABASEURI)
-
 engine = create_engine(DATABASEURI)
-for bp in blueprints:
-   app.register_blueprint(bp)
-
 
 @app.before_request
 def before_request():
-  """
-  This function is run at the beginning of every web request 
-  (every time you enter an address in the web browser).
-  We use it to setup a database connection that can be used throughout the request
-
-  The variable g is globally accessible
-  """
-  try:
-    g.conn = engine.connect()
-  except:
-    print("uh oh, problem connecting to database")
-    import traceback; traceback.print_exc()
-    g.conn = None
+    try:
+        g.conn = engine.connect()
+        # Print the logged-in user's email from the session, if it exists
+        if 'email' in session:
+            print(f"Logged in as: {session['email']}")
+        else:
+            print("No user is currently logged in.")
+    except:
+        print("Uh oh, problem connecting to the database")
+        import traceback
+        traceback.print_exc()
+        g.conn = None
 
 @app.teardown_request
 def teardown_request(exception):
-  """
-  At the end of the web request, this makes sure to close the database connection.
-  If you don't the database could run out of memory!
-  """
-  try:
-    g.conn.close()
-  except Exception as e:
-    pass
+    try:
+        g.conn.close()
+    except Exception as e:
+        pass
 
-@app.route('/')
-def index():
-    # This renders an HTML file that loads the Next.js app.
-    return render_template('index.html')
+# Endpoint for login
+@app.route('/api/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
 
-# @app.route('/api/data')
-# def get_data():
-#     return {"message": "Hello from Flask!"}
+    try:
+        user = g.conn.execute(
+            text("SELECT * FROM Users WHERE email = :email"),
+            {"email": email}
+        ).fetchone()
 
+        if user is None:
+            return jsonify({"error": "Email not found."}), 404
 
-# def home():
-#    if not session.get('logged_in'):
-#       return render_template('login.html')
-#    else:
-#       return "Hello Boss!"
+        db_password = user[3]  # Assuming the password is the 4th column
+        if not bcrypt.checkpw(password.encode('utf-8'), db_password.encode('utf-8')):
+            return jsonify({"error": "Incorrect password."}), 401
 
-# @app.route('/login', methods=['POST'])
-# def do_admin_login():
-#    if request.form['password'] == 'password' and request.form['username'] == 'admin':
-#       session['logged_in'] = True
-#    else:
-#       flash('wrong password!')
-#    return home()
+        # Store the user's email in the session
+        session['email'] = email
+        print(f"User {email} successfully logged in.")
 
+        return jsonify({"message": "Login successful!"}), 200
+    except Exception as e:
+        print(f"Error during login: {e}")
+        return jsonify({"error": "An error occurred during login."}), 500
+
+# Endpoint for logout
+@app.route('/api/logout', methods=['POST'])
+def logout():
+    if 'email' in session:
+        print(f"Logging out user: {session['email']}")
+        session.pop('email', None)
+    else:
+        print("No user was logged in to log out.")
+    return jsonify({"message": "Logout successful!"}), 200
+
+# New endpoint 1: Check user profile
+@app.route('/api/profile', methods=['GET'])
+def profile():
+    if 'email' in session:
+        return jsonify({"message": f"User profile for {session['email']}"}), 200
+    else:
+        return jsonify({"error": "User not logged in."}), 401
+
+# New endpoint 2: Access secure data
+@app.route('/api/secure-data', methods=['GET'])
+def secure_data():
+    if 'email' in session:
+        return jsonify({"message": f"Here is some secure data for {session['email']}"}), 200
+    else:
+        return jsonify({"error": "User not logged in."}), 401
 
 if __name__ == "__main__":
-   app.secret_key = os.urandom(12)
-   app.run(debug=True,host='0.0.0.0', port=4000)
+    app.run(debug=True, host='0.0.0.0', port=5000)

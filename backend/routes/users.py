@@ -14,5 +14,3 @@ def get_user_collections(user_id):
     # Use the below line if we're using only the backend!
     return render_template('renderCollections.html', collections=collections)
     # return jsonify(collections=collections)
-
-
