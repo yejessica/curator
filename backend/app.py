@@ -69,6 +69,7 @@ def register():
             text("INSERT INTO Users (username, email, password) VALUES (:username, :email, :password)"),
             {"username": username, "email": email, "password": hashed_password}
         )
+        g.conn.commit()
 
         print(f"User {email} successfully registered.")
         return jsonify({"message": "Registration successful!"}), 201
