@@ -3,12 +3,13 @@ from flask import Flask, request, jsonify, session, g
 from sqlalchemy import create_engine, text
 import bcrypt
 from flask_cors import CORS
+import secrets
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
 
 # Use the provided secret key
-app.secret_key = b'4b629ea0a2f866fd344b0c8b2371c538d9ffab2283595e05d3cece580328fe1b'
+app.secret_key = secrets.token_hex(32).encode('utf-8')
 
 DB_USER = "jj3390"
 DB_PASSWORD = "quesadillas"
