@@ -110,7 +110,7 @@ def login():
         return jsonify({"error": "An error occurred during login."}), 500
 
 # Endpoint for logout
-@app.route('/api/logout', methods=['POST'])
+@app.route('/api/logout', methods=['GET', 'POST'])
 def logout():
     if 'email' in session:
         print(f"Logging out user: {session['email']}")
