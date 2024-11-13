@@ -29,6 +29,9 @@ export default function Register() {
             }
 
             setSuccessMessage('Registration successful!');
+
+            window.location.href = '/login';
+
         } catch (error) {
             setErrorMessage('An error occurred. Please try again.');
         }
