@@ -45,10 +45,10 @@ def teardown_request(exception):
 def register():
     data = request.get_json()
     email = data.get('email')
-    name = data.get('username')  # Using 'username' from the frontend as 'name'
+    username = data.get('username')
     password = data.get('password')
 
-    if not email or not name or not password:
+    if not email or not username or not password:
         return jsonify({"error": "All fields are required."}), 400
 
     try:
@@ -66,8 +66,8 @@ def register():
 
         # Insert the new user into the database
         g.conn.execute(
-            text("INSERT INTO Users (name, email, password) VALUES (:name, :email, :password)"),
-            {"name": name, "email": email, "password": hashed_password}
+            text("INSERT INTO Users (username, email, password) VALUES (:username, :email, :password)"),
+            {"username": username, "email": email, "password": hashed_password}
         )
 
         print(f"User {email} successfully registered.")
