@@ -4,12 +4,15 @@ from sqlalchemy import create_engine, text
 import bcrypt
 from flask_cors import CORS
 import secrets
+import uuid
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
 
 # Use the provided secret key
-app.secret_key = secrets.token_hex(32).encode('utf-8')
+# app.secret_key = secrets.token_hex(32).encode('utf-8')
+
+app.secret_key = b'4b629ea0a2f866fd344b0c8b2371c538d9ffab2283595e05d3cece580328fe1b'
 
 DB_USER = "jj3390"
 DB_PASSWORD = "quesadillas"
@@ -65,10 +68,12 @@ def register():
         # Hash the password
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
+        # Create the uuid
+        random_uuid = uuid.uuid4()
         # Insert the new user into the database
         g.conn.execute(
-            text("INSERT INTO Users (username, email, password) VALUES (:username, :email, :password)"),
-            {"username": username, "email": email, "password": hashed_password}
+            text("INSERT INTO Users (user_id, username, email, password) VALUES (:user_id, :username, :email, :password)"),
+            {"user_id": random_uuid, "username": username, "email": email, "password": hashed_password}
         )
         g.conn.commit()
 
@@ -135,6 +140,45 @@ def secure_data():
         return jsonify({"message": f"Here is some secure data for {session['email']}"}), 200
     else:
         return jsonify({"error": "User not logged in."}), 401
+    
+@app.route('/api/current-email', methods=['GET'])
+def get_current_email():
+    email = session.get('email')  # Retrieve the email from the session
+    if email:
+        # collections = g.conn.execute(SELECT * FROM collections WHERE user = )
+        return jsonify({"email": email}), 200
+    return jsonify({"error": "No email found in session"}), 404
+
+@app.route('/api/all-user-collections', methods= ['GET'])
+def get_all_user_collections():
+    email = session.get('email')
+    if email:
+        result = g.conn.execute(
+            text("""
+            SELECT c.collection_id, c.url, c.title, c.views, c.likes, c.user_id
+            FROM Collections c
+            JOIN Users u ON c.user_id = u.user_id
+            WHERE u.email = :email;
+            """),
+            {"email":email}
+        )
+
+        collections = []
+        for row in result:
+            collections.append({
+                'collection_id': row[0],  # Accessing by index
+                'url': row[1],
+                'title': row[2],
+                'views': row[3],
+                'likes': row[4],
+                'user_id': row[5]
+        })
+
+
+        # collections = [dict(row) for row in result]
+        return jsonify({"email": email, "collections":collections}), 200
+    
+    return jsonify({"error": "No email found in session"}), 404
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5000)

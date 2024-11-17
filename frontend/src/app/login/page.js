@@ -25,7 +25,10 @@ export default function Login() {
                 setErrorMessage(data.error || 'Login failed.');
                 return;
             }
-
+            // login was successful, redirect to dashboard.
+            else{
+                window.location.href = '/dashboard';
+            }
             // Handle successful login (e.g., redirect or set session)
         } catch (error) {
             setErrorMessage('An error occurred. Please try again.');
