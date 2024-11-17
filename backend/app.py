@@ -103,11 +103,14 @@ def login():
             return jsonify({"error": "Email not found."}), 404
 
         db_password = user[3]  # Assuming the password is the 4th column
+        username = user[1]
+        # print(username)
         if not bcrypt.checkpw(password.encode('utf-8'), db_password.encode('utf-8')):
             return jsonify({"error": "Incorrect password."}), 401
 
         # Store the user's email in the session
         session['email'] = email
+        session['username'] = username
         print(f"User {email} successfully logged in.")
 
         return jsonify({"message": "Login successful!"}), 200
@@ -152,6 +155,7 @@ def get_current_email():
 @app.route('/api/all-user-collections', methods= ['GET'])
 def get_all_user_collections():
     email = session.get('email')
+    username = session.get('username')
     if email:
         result = g.conn.execute(
             text("""
@@ -173,10 +177,11 @@ def get_all_user_collections():
                 'likes': row[4],
                 'user_id': row[5]
         })
+            
 
 
         # collections = [dict(row) for row in result]
-        return jsonify({"email": email, "collections":collections}), 200
+        return jsonify({"email": email, "username": username, "collections":collections}), 200
     
     return jsonify({"error": "No email found in session"}), 404
 
