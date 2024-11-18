@@ -2,12 +2,25 @@
 
 import { useEffect, useState } from 'react';
 
-export default function Collection({ params }) {
-    const { uuid } = params;
+export default function Collection({ params: paramsPromise }) {
+    const [uuid, setUuid] = useState(null);
     const [exhibits, setExhibits] = useState([]);
     const [error, setError] = useState(null);
 
+    // Unwrap `params` using `useEffect`
     useEffect(() => {
+        const unwrapParams = async () => {
+            const params = await paramsPromise;
+            setUuid(params.uuid);
+        };
+
+        unwrapParams();
+    }, [paramsPromise]);
+
+    // Fetch data only when `uuid` is set
+    useEffect(() => {
+        if (!uuid) return;
+
         const fetchData = async () => {
             try {
                 const res = await fetch(`http://localhost:5000/api/collection/${uuid}`);
@@ -29,7 +42,7 @@ export default function Collection({ params }) {
         return <div>Error: {error}</div>;
     }
 
-    if (!exhibits.length) {
+    if (!uuid || !exhibits.length) {
         return <div>Loading...</div>;
     }
 
@@ -51,7 +64,7 @@ export default function Collection({ params }) {
                     </ul>
 
                     {/* Display format-specific data */}
-                    {exhibit.exhibit_format === "images" && (
+                    {exhibit.exhibit_format === "Images" && (
                         <div>
                             <h3>Images:</h3>
                             {exhibit.format_specific.images.map((image, index) => (
@@ -60,7 +73,7 @@ export default function Collection({ params }) {
                         </div>
                     )}
 
-                    {exhibit.exhibit_format === "embeds" && (
+                    {exhibit.exhibit_format === "Embeds" && (
                         <div>
                             <h3>Embeds:</h3>
                             {exhibit.format_specific.embeds.map((embed, index) => (
@@ -69,7 +82,7 @@ export default function Collection({ params }) {
                         </div>
                     )}
 
-                    {exhibit.exhibit_format === "texts" && (
+                    {exhibit.exhibit_format === "Texts" && (
                         <div>
                             <h3>Texts:</h3>
                             {exhibit.format_specific.texts.map((textItem, index) => (
@@ -81,7 +94,7 @@ export default function Collection({ params }) {
                         </div>
                     )}
 
-                    {exhibit.exhibit_format === "videos" && (
+                    {exhibit.exhibit_format === "Videos" && (
                         <div>
                             <h3>Videos:</h3>
                             {exhibit.format_specific.videos.map((video, index) => (
