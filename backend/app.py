@@ -190,20 +190,123 @@ def get_all_user_collections():
 def get_collection_data(uuid):
     if g.conn:
         try:
-            # Query to get exhibits and relevant data
+            # Query to get all exhibits in the collection, including basic data and tags
             query = text("""
-                SELECT exhibits.title, exhibits.created_at, exhibits.exhibit_format, exhibits.xcoord, exhibits.ycoord,
-                       exhibits.height, exhibits.width, users.username
+                SELECT exhibits.exhibit_id, exhibits.title, exhibits.created_at, exhibits.exhibit_format,
+                       exhibits.xcoord, exhibits.ycoord, exhibits.height, exhibits.width, tags.name AS tag
                 FROM exhibits
-                JOIN collections ON exhibits.collection_id = collections.collection_id
-                JOIN users ON collections.user_id = users.user_id
-                WHERE collections.collection_id = :uuid
+                LEFT JOIN tags ON exhibits.exhibit_id = tags.exhibit_id
+                WHERE exhibits.collection_id = :uuid
             """)
-            # Pass the parameter as a dictionary
             result = g.conn.execute(query, {"uuid": uuid})
             exhibits = [dict(row) for row in result]
-            print(exhibits)
-            return jsonify({"exhibits": exhibits}), 200
+
+            # Organize exhibits and their tags
+            exhibit_dict = {}
+            for exhibit in exhibits:
+                exhibit_id = exhibit["exhibit_id"]
+                if exhibit_id not in exhibit_dict:
+                    exhibit_dict[exhibit_id] = {
+                        "exhibit_id": exhibit_id,
+                        "title": exhibit["title"],
+                        "created_at": exhibit["created_at"],
+                        "exhibit_format": exhibit["exhibit_format"],
+                        "xcoord": exhibit["xcoord"],
+                        "ycoord": exhibit["ycoord"],
+                        "height": exhibit["height"],
+                        "width": exhibit["width"],
+                        "tags": set()
+                    }
+                if exhibit["tag"]:
+                    exhibit_dict[exhibit_id]["tags"].add(exhibit["tag"])
+
+            # Convert sets to lists for JSON serialization
+            for exhibit in exhibit_dict.values():
+                exhibit["tags"] = list(exhibit["tags"])
+
+            # Fetch exhibit-specific data based on exhibit_format
+            for exhibit in exhibit_dict.values():
+                exhibit_id = exhibit["exhibit_id"]
+                format_specific_data = {}
+
+                if exhibit["exhibit_format"] == "images":
+                    image_query = text("SELECT directory FROM images WHERE exhibit_id = :exhibit_id")
+                    image_result = g.conn.execute(image_query, {"exhibit_id": exhibit_id})
+                    format_specific_data["images"] = [dict(row) for row in image_result]
+
+                elif exhibit["exhibit_format"] == "embeds":
+                    embed_query = text("SELECT directory FROM embeds WHERE exhibit_id = :exhibit_id")
+                    embed_result = g.conn.execute(embed_query, {"exhibit_id": exhibit_id})
+                    format_specific_data["embeds"] = [dict(row) for row in embed_result]
+
+                elif exhibit["exhibit_format"] == "texts":
+                    text_query = text("SELECT text, font FROM texts WHERE exhibit_id = :exhibit_id")
+                    text_result = g.conn.execute(text_query, {"exhibit_id": exhibit_id})
+                    format_specific_data["texts"] = [dict(row) for row in text_result]
+
+                elif exhibit["exhibit_format"] == "videos":
+                    video_query = text("SELECT directory FROM videos WHERE exhibit_id = :exhibit_id")
+                    video_result = g.conn.execute(video_query, {"exhibit_id": exhibit_id})
+                    format_specific_data["videos"] = [dict(row) for row in video_result]
+
+                exhibit["format_specific"] = format_specific_data
+
+            return jsonify({"exhibits": list(exhibit_dict.values())}), 200
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+    else:
+        return jsonify({"error": "Failed to connect to the database"}), 500
+    
+# Endpoint to get exhibit data including tags and collection name
+@app.route('/api/exhibit/<uuid>', methods=['GET'])
+def get_exhibit_data(uuid):
+    if g.conn:
+        try:
+            # Query to get the main exhibit data and tags
+            main_query = text("""
+                SELECT exhibits.title, exhibits.created_at, exhibits.exhibit_format, exhibits.xcoord, exhibits.ycoord,
+                       exhibits.height, exhibits.width, collections.title AS collection_name, tags.name AS tag
+                FROM exhibits
+                JOIN collections ON exhibits.collection_id = collections.collection_id
+                LEFT JOIN tags ON exhibits.exhibit_id = tags.exhibit_id
+                WHERE exhibits.exhibit_id = :uuid
+            """)
+            main_result = g.conn.execute(main_query, {"uuid": uuid})
+            exhibits = [dict(row) for row in main_result]
+
+            if exhibits:
+                # Base exhibit data
+                exhibit_data = exhibits[0]
+                exhibit_data["tags"] = list({row["tag"] for row in exhibits if row["tag"]})
+
+                # Format-specific data (depending on embed)
+                format_specific_data = {}
+
+                if exhibit_data["exhibit_format"] == "Images":
+                    image_query = text("SELECT directory FROM images WHERE exhibit_id = :uuid")
+                    image_result = g.conn.execute(image_query, {"uuid": uuid})
+                    format_specific_data["images"] = [dict(row) for row in image_result]
+
+                elif exhibit_data["exhibit_format"] == "Embeds":
+                    embed_query = text("SELECT directory FROM embeds WHERE exhibit_id = :uuid")
+                    embed_result = g.conn.execute(embed_query, {"uuid": uuid})
+                    format_specific_data["embeds"] = [dict(row) for row in embed_result]
+
+                elif exhibit_data["exhibit_format"] == "Texts":
+                    text_query = text("SELECT text, font FROM texts WHERE exhibit_id = :uuid")
+                    text_result = g.conn.execute(text_query, {"uuid": uuid})
+                    format_specific_data["texts"] = [dict(row) for row in text_result]
+
+                elif exhibit_data["exhibit_format"] == "Videos":
+                    video_query = text("SELECT directory FROM videos WHERE exhibit_id = :uuid")
+                    video_result = g.conn.execute(video_query, {"uuid": uuid})
+                    format_specific_data["videos"] = [dict(row) for row in video_result]
+
+                exhibit_data["format_specific"] = format_specific_data
+            else:
+                exhibit_data = None
+
+            return jsonify({"exhibit": exhibit_data}), 200
         except Exception as e:
             return jsonify({"error": str(e)}), 500
     else:
