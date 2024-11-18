@@ -185,5 +185,29 @@ def get_all_user_collections():
     
     return jsonify({"error": "No email found in session"}), 404
 
+# Route to get exhibits by collection_id
+@app.route('/api/collection/<uuid>', methods=['GET'])
+def get_collection_data(uuid):
+    if g.conn:
+        try:
+            # Query to get exhibits and relevant data
+            query = text("""
+                SELECT exhibits.title, exhibits.created_at, exhibits.exhibit_format, exhibits.xcoord, exhibits.ycoord,
+                       exhibits.height, exhibits.width, users.username
+                FROM exhibits
+                JOIN collections ON exhibits.collection_id = collections.collection_id
+                JOIN users ON collections.user_id = users.user_id
+                WHERE collections.collection_id = :uuid
+            """)
+            # Pass the parameter as a dictionary
+            result = g.conn.execute(query, {"uuid": uuid})
+            exhibits = [dict(row) for row in result]
+            print(exhibits)
+            return jsonify({"exhibits": exhibits}), 200
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+    else:
+        return jsonify({"error": "Failed to connect to the database"}), 500
+
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5000)
