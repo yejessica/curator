@@ -230,12 +230,12 @@ def get_collection_data(uuid):
                 format_specific_data = {}
 
                 if exhibit["exhibit_format"] == "images":
-                    image_query = text("SELECT directory FROM images WHERE exhibit_id = :exhibit_id")
+                    image_query = text("SELECT url FROM images WHERE exhibit_id = :exhibit_id")
                     image_result = g.conn.execute(image_query, {"exhibit_id": exhibit_id})
                     format_specific_data["images"] = [dict(row) for row in image_result]
 
                 elif exhibit["exhibit_format"] == "embeds":
-                    embed_query = text("SELECT directory FROM embeds WHERE exhibit_id = :exhibit_id")
+                    embed_query = text("SELECT url FROM embeds WHERE exhibit_id = :exhibit_id")
                     embed_result = g.conn.execute(embed_query, {"exhibit_id": exhibit_id})
                     format_specific_data["embeds"] = [dict(row) for row in embed_result]
 
@@ -245,7 +245,7 @@ def get_collection_data(uuid):
                     format_specific_data["texts"] = [dict(row) for row in text_result]
 
                 elif exhibit["exhibit_format"] == "videos":
-                    video_query = text("SELECT directory FROM videos WHERE exhibit_id = :exhibit_id")
+                    video_query = text("SELECT url FROM videos WHERE exhibit_id = :exhibit_id")
                     video_result = g.conn.execute(video_query, {"exhibit_id": exhibit_id})
                     format_specific_data["videos"] = [dict(row) for row in video_result]
 
@@ -283,12 +283,12 @@ def get_exhibit_data(uuid):
                 format_specific_data = {}
 
                 if exhibit_data["exhibit_format"] == "Images":
-                    image_query = text("SELECT directory FROM images WHERE exhibit_id = :uuid")
+                    image_query = text("SELECT url FROM images WHERE exhibit_id = :uuid")
                     image_result = g.conn.execute(image_query, {"uuid": uuid})
                     format_specific_data["images"] = [dict(row) for row in image_result]
 
                 elif exhibit_data["exhibit_format"] == "Embeds":
-                    embed_query = text("SELECT directory FROM embeds WHERE exhibit_id = :uuid")
+                    embed_query = text("SELECT url FROM embeds WHERE exhibit_id = :uuid")
                     embed_result = g.conn.execute(embed_query, {"uuid": uuid})
                     format_specific_data["embeds"] = [dict(row) for row in embed_result]
 
@@ -298,7 +298,7 @@ def get_exhibit_data(uuid):
                     format_specific_data["texts"] = [dict(row) for row in text_result]
 
                 elif exhibit_data["exhibit_format"] == "Videos":
-                    video_query = text("SELECT directory FROM videos WHERE exhibit_id = :uuid")
+                    video_query = text("SELECT url FROM videos WHERE exhibit_id = :uuid")
                     video_result = g.conn.execute(video_query, {"uuid": uuid})
                     format_specific_data["videos"] = [dict(row) for row in video_result]
 

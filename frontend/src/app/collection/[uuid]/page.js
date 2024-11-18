@@ -55,7 +55,7 @@ export default function Collection({ params }) {
                         <div>
                             <h3>Images:</h3>
                             {exhibit.format_specific.images.map((image, index) => (
-                                <p key={index}>Directory: {image.directory}</p>
+                                <p key={index}>URL: {image.url}</p>
                             ))}
                         </div>
                     )}
@@ -64,7 +64,7 @@ export default function Collection({ params }) {
                         <div>
                             <h3>Embeds:</h3>
                             {exhibit.format_specific.embeds.map((embed, index) => (
-                                <p key={index}>Directory: {embed.directory}</p>
+                                <p key={index}>URL: {embed.url}</p>
                             ))}
                         </div>
                     )}
@@ -85,7 +85,7 @@ export default function Collection({ params }) {
                         <div>
                             <h3>Videos:</h3>
                             {exhibit.format_specific.videos.map((video, index) => (
-                                <p key={index}>Directory: {video.directory}</p>
+                                <p key={index}>URL: {video.url}</p>
                             ))}
                         </div>
                     )}
