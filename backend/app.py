@@ -673,6 +673,155 @@ def like_collection(url):
         return jsonify({"message": "Likes incremented successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+# Endpoint to save a collection
+@app.route('/api/collection/<url>/save', methods=['POST'])
+def save_collection(url):
+    if 'email' not in session:
+        return jsonify({"error": "User not logged in"}), 401
+
+    email = session['email']
+
+    try:
+        # Get user_id from email
+        user_query = text("SELECT user_id FROM Users WHERE email = :email")
+        user_result = g.conn.execute(user_query, {"email": email}).fetchone()
+        if not user_result:
+            return jsonify({"error": "User not found"}), 404
+
+        user_id = user_result[0]
+
+        # Get collection_id from URL
+        collection_query = text("SELECT collection_id FROM Collections WHERE url = :url")
+        collection_result = g.conn.execute(collection_query, {"url": url}).fetchone()
+        if not collection_result:
+            return jsonify({"error": "Collection not found"}), 404
+
+        collection_id = collection_result[0]
+
+        # Check if the collection is already saved
+        check_query = text("SELECT * FROM Saves WHERE user_id = :user_id AND collection_id = :collection_id")
+        saved = g.conn.execute(check_query, {"user_id": user_id, "collection_id": collection_id}).fetchone()
+        if saved:
+            return jsonify({"message": "Collection already saved"}), 200
+
+        # Save the collection
+        save_query = text("INSERT INTO Saves (user_id, collection_id) VALUES (:user_id, :collection_id)")
+        g.conn.execute(save_query, {"user_id": user_id, "collection_id": collection_id})
+        g.conn.commit()
+
+        return jsonify({"message": "Collection saved successfully"}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# Endpoint to check if a collection is saved
+@app.route('/api/collection/<url>/is-saved', methods=['GET'])
+def is_collection_saved(url):
+    if 'email' not in session:
+        return jsonify({"error": "User not logged in"}), 401
+
+    email = session['email']
+
+    try:
+        # Get user_id from email
+        user_query = text("SELECT user_id FROM Users WHERE email = :email")
+        user_result = g.conn.execute(user_query, {"email": email}).fetchone()
+        if not user_result:
+            return jsonify({"error": "User not found"}), 404
+
+        user_id = user_result[0]
+
+        # Get collection_id from URL
+        collection_query = text("SELECT collection_id FROM Collections WHERE url = :url")
+        collection_result = g.conn.execute(collection_query, {"url": url}).fetchone()
+        if not collection_result:
+            return jsonify({"error": "Collection not found"}), 404
+
+        collection_id = collection_result[0]
+
+        # Check if the collection is saved
+        check_query = text("SELECT * FROM Saves WHERE user_id = :user_id AND collection_id = :collection_id")
+        saved = g.conn.execute(check_query, {"user_id": user_id, "collection_id": collection_id}).fetchone()
+
+        return jsonify({"is_saved": bool(saved)}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# Endpoint to get saved collections for the user
+@app.route('/api/saved-collections', methods=['GET'])
+def get_saved_collections():
+    if 'email' not in session:
+        return jsonify({"error": "User not logged in"}), 401
+
+    email = session['email']
+
+    try:
+        # Get user_id from email
+        user_query = text("SELECT user_id FROM Users WHERE email = :email")
+        user_result = g.conn.execute(user_query, {"email": email}).fetchone()
+        if not user_result:
+            return jsonify({"error": "User not found"}), 404
+
+        user_id = user_result[0]
+
+        # Get saved collections
+        saved_collections_query = text("""
+            SELECT c.collection_id, c.url, c.title, c.views, c.likes, c.user_id
+            FROM Collections c
+            JOIN Saves s ON c.collection_id = s.collection_id
+            WHERE s.user_id = :user_id
+        """)
+        saved_collections = g.conn.execute(saved_collections_query, {"user_id": user_id}).fetchall()
+
+        collections = [
+            {
+                "collection_id": row[0],
+                "url": row[1],
+                "title": row[2],
+                "views": row[3],
+                "likes": row[4],
+                "user_id": row[5]
+            }
+            for row in saved_collections
+        ]
+
+        return jsonify({"saved_collections": collections}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+# Endpoint to unsave a collection
+@app.route('/api/collection/<url>/unsave', methods=['POST'])
+def unsave_collection(url):
+    if 'email' not in session:
+        return jsonify({"error": "User not logged in"}), 401
+
+    email = session['email']
+
+    try:
+        # Get user_id from email
+        user_query = text("SELECT user_id FROM Users WHERE email = :email")
+        user_result = g.conn.execute(user_query, {"email": email}).fetchone()
+        if not user_result:
+            return jsonify({"error": "User not found"}), 404
+
+        user_id = user_result[0]
+
+        # Get collection_id from URL
+        collection_query = text("SELECT collection_id FROM Collections WHERE url = :url")
+        collection_result = g.conn.execute(collection_query, {"url": url}).fetchone()
+        if not collection_result:
+            return jsonify({"error": "Collection not found"}), 404
+
+        collection_id = collection_result[0]
+
+        # Remove the saved collection
+        delete_query = text("DELETE FROM Saves WHERE user_id = :user_id AND collection_id = :collection_id")
+        g.conn.execute(delete_query, {"user_id": user_id, "collection_id": collection_id})
+        g.conn.commit()
+
+        return jsonify({"message": "Collection unsaved successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5000)

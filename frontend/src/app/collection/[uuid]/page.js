@@ -14,6 +14,7 @@ export default function Collection({ params: paramsPromise }) {
     const [username, setUsername] = useState(null);
     const [email, setEmail] = useState(null);
     const [collection_username, setCollectionUsername] = useState(null);
+    const [isSaved, setIsSaved] = useState(false);
 
     useEffect(() => {
         const unwrapParams = async () => {
@@ -71,6 +72,13 @@ export default function Collection({ params: paramsPromise }) {
                 setViews(data.views || 0);
                 setLikes(data.likes || 0);
                 setCollectionUsername(data.collection_username || "");
+
+                // Check if the collection is saved
+                const savedRes = await fetch(`http://localhost:5000/api/collection/${uuid}/is-saved`, {
+                    credentials: 'include'
+                });
+                const savedData = await savedRes.json();
+                setIsSaved(savedData.is_saved);
             } catch (error) {
                 setError(error.message);
             }
@@ -96,6 +104,24 @@ export default function Collection({ params: paramsPromise }) {
         }
     };
 
+    const handleSaveToggle = async () => {
+        try {
+            const endpoint = isSaved ? 'unsave' : 'save';
+            const res = await fetch(`http://localhost:5000/api/collection/${uuid}/${endpoint}`, {
+                method: 'POST',
+                credentials: 'include',
+            });
+
+            if (!res.ok) {
+                throw new Error(`Failed to ${isSaved ? 'unsave' : 'save'} the collection`);
+            }
+
+            setIsSaved(!isSaved);
+        } catch (error) {
+            setError(error.message);
+        }
+    };
+
     if (error) {
         return <div>Error: {error}</div>;
     }
@@ -106,16 +132,11 @@ export default function Collection({ params: paramsPromise }) {
 
     return (
         <div className="bg-background font-helvetica text-white min-h-screen w-fill overflow-x-hidden">
-            {/* <h1>Collection Exhibits</h1> */}
+            <Navbar username={username} />
 
-            <Navbar username={username}/>
-            
             <div className="flex flex-col items-start gap-[30px] self-stretch md:p-[60px_100px] p-[60px_35px]">
-                {/* TOP INFO BAR AREA */}
                 <div className="flex items-center justify-between self-stretch flex-wrap gap-[15px]">
-                    {/* LEFT COL */}
                     <div className="flex flex-col w-[300px] justify-center items-start gap-[18px]">
-                        {/* TITLE, USERNAME */}
                         <div className="flex flex-col w-[812px] justify-center items-start gap-[4px]">
                             <h1 className="text-white font-helvetica text-[32px] font-bold">{title}</h1>
                             <h3 className="text-[#BDC1C6] font-helvetica text-xl font-medium">@{collection_username}</h3>
@@ -126,28 +147,19 @@ export default function Collection({ params: paramsPromise }) {
                                 className="w-[45px] h-[45px] shrink-0 rounded-[16px] bg-[#086788] flex justify-center items-center"
                                 onClick={handleLike}
                             >
-                                <Image
-                                    src="/like.svg"
-                                    width={32}
-                                    height={32}
-                                    alt="Like Icon"
-                                />
+                                <Image src="/like.svg" width={32} height={32} alt="Like Icon" />
                             </div>
                             <div className="w-[45px] h-[45px] shrink-0 rounded-[16px] bg-[#086788] flex justify-center items-center">
-                                <Image
-                                    src="/comment.svg"
-                                    width={32}
-                                    height={32}
-                                    alt="Comment Icon"
-                                />
+                                <Image src="/comment.svg" width={32} height={32} alt="Comment Icon" />
                             </div>
-                            <div className="w-[45px] h-[45px] shrink-0 rounded-[16px] bg-[#086788] flex justify-center items-center">
-                                <Image
-                                    src="/save.svg"
-                                    width={32}
-                                    height={32}
-                                    alt="Save Icon"
-                                />
+                            <div
+                                role="button"
+                                className={`w-[45px] h-[45px] shrink-0 rounded-[16px] ${
+                                    isSaved ? "bg-[#31819c]" : "bg-[#086788]"
+                                } flex justify-center items-center`}
+                                onClick={handleSaveToggle}
+                            >
+                                <Image src="/save.svg" width={32} height={32} alt="Save Icon" />
                             </div>
                         </div>
                     </div>
@@ -163,22 +175,16 @@ export default function Collection({ params: paramsPromise }) {
                     </div>
                 </div>
 
-                {/* ALL THE EXHIBITS DISPLAYED */}
-                <div className="flex flex-wrap items-start self-stretch gap-[20px] break-words ">
-                    
+                <div className="flex flex-wrap items-start self-stretch gap-[20px] break-words">
                     {exhibits.map((exhibit, index) => (
                         <div key={index} className="w-full md:w-[48%] lg:w-[31%] xl:w-[32%] p-4 border rounded-lg shadow-lg block">
-                            
-
                             {exhibit.exhibit_format === "Images" && (
                                 <div>
-                                    {/* <h3>Images:</h3> */}
                                     {exhibit.format_specific.images.map((image, index) => (
-                                    <img key={index} src={image.url} alt={exhibit.title} className="w-full object-contain" />
+                                        <img key={index} src={image.url} alt={exhibit.title} className="w-full object-contain" />
                                     ))}
                                 </div>
                             )}
-
                             {exhibit.exhibit_format === "Embeds" && (
                                 <div>
                                     <h3>Embeds:</h3>
@@ -187,7 +193,6 @@ export default function Collection({ params: paramsPromise }) {
                                     ))}
                                 </div>
                             )}
-
                             {exhibit.exhibit_format === "Texts" && (
                                 <div>
                                     <h3>Texts:</h3>
@@ -199,41 +204,18 @@ export default function Collection({ params: paramsPromise }) {
                                     ))}
                                 </div>
                             )}
-
                             {exhibit.exhibit_format === "Videos" && (
                                 <div>
-                                <h3>Videos:</h3>
-                                {exhibit.format_specific.videos.map((video, index) => (
-                                    <iframe key={index}
-                                    src={video.url}>
-                                    </iframe>
-                                    // <p key={index}>URL: {video.url}</p>
-                                ))}
-
-                                {/* <iframe width="420" height="315"
-                                src="https://www.youtube.com/embed/tgbNymZ7vqY">
-                                </iframe> */}
-
+                                    <h3>Videos:</h3>
+                                    {exhibit.format_specific.videos.map((video, index) => (
+                                        <iframe key={index} src={video.url}></iframe>
+                                    ))}
                                 </div>
                             )}
-                            <div className='text-[#c5c9cd] font-helvetica text-[18px] flex flex-wrap justify-between break-words'>
-                                <p className='font-bold'>{exhibit.title}</p>
+                            <div className="text-[#c5c9cd] font-helvetica text-[18px] flex flex-wrap justify-between break-words">
+                                <p className="font-bold">{exhibit.title}</p>
                                 <p>{new Date(exhibit.created_at).toLocaleDateString()}</p>
                             </div>
-                            
-                            
-                            
-                            {/* <p>Format: {exhibit.exhibit_format}</p>
-                            <p>Coordinates: ({exhibit.xcoord}, {exhibit.ycoord})</p>
-                            <p>Dimensions: {exhibit.width} x {exhibit.height}</p> */}
-
-                            {/* TAGS!! REVISIT!! */}
-                            {/* <h3>Tags:</h3>
-                            <ul>
-                                {exhibit.tags.map((tag, index) => (
-                                <li key={index}>{tag}</li>
-                                ))}
-                            </ul> */}
                         </div>
                     ))}
                 </div>
