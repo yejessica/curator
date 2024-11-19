@@ -629,6 +629,28 @@ def update_collection(url):
         return jsonify({"message": "Collection updated successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+# Endpoint to increment views for a collection
+@app.route('/api/collection/<url>/increment-views', methods=['POST'])
+def increment_views(url):
+    try:
+        # Find the collection by URL
+        collection_query = text("SELECT collection_id FROM Collections WHERE url = :url")
+        result = g.conn.execute(collection_query, {"url": url}).fetchone()
+
+        if not result:
+            return jsonify({"error": "Collection not found"}), 404
+
+        collection_id = result[0]
+
+        # Increment the views count
+        update_views_query = text("UPDATE Collections SET views = views + 1 WHERE collection_id = :collection_id")
+        g.conn.execute(update_views_query, {"collection_id": collection_id})
+        g.conn.commit()
+
+        return jsonify({"message": "Views incremented successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5000)
