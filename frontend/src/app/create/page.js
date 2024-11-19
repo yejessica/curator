@@ -178,6 +178,8 @@ export default function CreateCollection() {
                     )}
                 </div>
             ))}
+
+            <p>Before saving the collection, you must add an exhibit.</p>
             <button
                 className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 mb-4"
                 onClick={addExhibit}
@@ -194,7 +196,7 @@ export default function CreateCollection() {
 
             {uuid && (
                 <div className="mt-4 p-4 bg-green-100 border border-green-300 rounded-md">
-                    <p>Collection created! UUID: {uuid}</p>
+                    <p>Collection created! URL: {uuid}</p>
                     <button
                         className="bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-900 mt-2"
                         onClick={() => navigator.clipboard.writeText(`http://localhost:3000/collection/${uuid}`)}

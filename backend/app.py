@@ -5,6 +5,8 @@ import bcrypt
 from flask_cors import CORS
 import secrets
 import uuid
+import random
+import string
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
@@ -186,15 +188,26 @@ def get_all_user_collections():
     return jsonify({"error": "No email found in session"}), 404
 
 # Route to get exhibits by collection_id
-@app.route('/api/collection/<uuid>', methods=['GET'])
-def get_collection_data(uuid):
+@app.route('/api/collection/<url>', methods=['GET'])
+def get_collection_data(url):
     if not g.conn:
         print("Debug: Failed to connect to the database.")
         return jsonify({"error": "Failed to connect to the database"}), 500
 
     try:
-        print(f"Debug: Starting to fetch exhibits for collection ID: {uuid}")
+        print(f"Debug: Starting to fetch exhibits for collection ID: {url}")
+        # Pre-processing step: Figure out what the uuid is (url --> uuid)
+        query = text("""
+            SELECT collections.collection_id FROM collections WHERE collections.url = :url
+        """)
+        result = g.conn.execute(query, {"url": url}).fetchone()
 
+        if result is None:
+            raise ValueError("No collection found for the given URL.")
+        collection_id = result[0]
+        # print(collection_id)
+                  
+        
         # Step 1: Fetch all exhibits and their tags in one query
         query = text("""
             SELECT exhibits.exhibit_id, exhibits.title, exhibits.created_at, exhibits.exhibit_format,
@@ -203,7 +216,7 @@ def get_collection_data(uuid):
             LEFT JOIN tags ON exhibits.exhibit_id = tags.exhibit_id
             WHERE exhibits.collection_id = :uuid
         """)
-        result = g.conn.execute(query, {"uuid": uuid})
+        result = g.conn.execute(query, {"uuid": collection_id})
         print("Debug: Query executed successfully.")
 
         # Use row._mapping for safer conversion to dictionaries
@@ -375,6 +388,10 @@ def create_collection():
         # Generate a UUID for the new collection
         collection_uuid = str(uuid.uuid4())
 
+        letters = string.ascii_letters  # Includes both uppercase and lowercase
+        url = ''.join(random.choices(letters, k=10))
+
+
         # Insert the collection into the database
         insert_collection_query = text("""
             INSERT INTO collections (collection_id, title, url, user_id)
@@ -383,7 +400,7 @@ def create_collection():
         g.conn.execute(insert_collection_query, {
             "uuid": collection_uuid,
             "title": collection_name,
-            "url": collection_uuid,  # Use the collection_uuid as the url temporarily
+            "url": url,  # Use the collection_uuid as the url temporarily - CHANGED
             "user_id": user_id
         })
 
@@ -443,7 +460,7 @@ def create_collection():
                     "font": exhibit.get('font', '')
                 })
 
-        return jsonify({"uuid": collection_uuid}), 201
+        return jsonify({"uuid": url}), 201
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
