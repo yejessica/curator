@@ -13,7 +13,7 @@ export default function EditCollection() {
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        // Fetch collection data
+        // Fetch existing collection data
         const fetchCollection = async () => {
             try {
                 const res = await fetch(`http://localhost:5000/api/collection/${uuid}/edit`, {
@@ -21,10 +21,8 @@ export default function EditCollection() {
                 });
 
                 if (res.status === 401) {
-                    // Redirect to login if not authenticated
                     router.push("/login");
                 } else if (res.status === 403) {
-                    // Redirect to dashboard if not the owner
                     router.push("/dashboard");
                 } else if (!res.ok) {
                     throw new Error("Failed to fetch collection data");
@@ -42,8 +40,31 @@ export default function EditCollection() {
         fetchCollection();
     }, [uuid, router]);
 
+    const addExhibit = () => {
+        setExhibits([...exhibits, { title: "", url: "", exhibit_format: "", text: "", font: "" }]);
+    };
+
+    const removeExhibit = (index) => {
+        setExhibits(exhibits.filter((_, i) => i !== index));
+    };
+
     const handleExhibitChange = (index, field, value) => {
         const newExhibits = [...exhibits];
+        if (field === "font") {
+            const validFonts = ["sans", "serif", "mono"];
+            if (!validFonts.includes(value)) {
+                setError("Invalid font. Only 'sans', 'serif', and 'mono' are allowed.");
+                return;
+            } else {
+                setError(null); // Clear any previous error
+            }
+        }
+
+        // Ensure exhibit_format is capitalized
+        if (field === "exhibit_format") {
+            value = value.charAt(0).toUpperCase() + value.slice(1);
+        }
+
         newExhibits[index][field] = value;
         setExhibits(newExhibits);
     };
@@ -85,71 +106,93 @@ export default function EditCollection() {
 
             <h2 className="text-xl font-semibold mb-3">Exhibits</h2>
             {exhibits.map((exhibit, index) => (
-                <div key={index} className="mb-4 p-4 bg-white border border-gray-200 rounded-md shadow-sm">
-                    <input
-                        type="text"
-                        placeholder="Title"
-                        className="w-full p-2 border border-gray-300 rounded-md mb-2"
-                        value={exhibit.title}
-                        onChange={(e) => handleExhibitChange(index, "title", e.target.value)}
-                    />
-
-                    <select
-                        className="w-full p-2 border border-gray-300 rounded-md mb-2"
-                        value={exhibit.exhibit_format}
-                        onChange={(e) => handleExhibitChange(index, "exhibit_format", e.target.value)}
+                <div key={index} className="mb-4 p-4 bg-white border border-gray-200 rounded-md shadow-sm relative">
+                    <button
+                        className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+                        onClick={() => removeExhibit(index)}
                     >
-                        <option value="">Select Format</option>
-                        <option value="Images">Images</option>
-                        <option value="Videos">Videos</option>
-                        <option value="Embeds">Embeds</option>
-                        <option value="Texts">Texts</option>
-                    </select>
-
-                    {/* Show URL input for relevant formats */}
-                    {(exhibit.exhibit_format === "Images" || exhibit.exhibit_format === "Videos" || exhibit.exhibit_format === "Embeds") && (
+                        &times;
+                    </button>
+                    <div className="mb-2">
                         <input
                             type="text"
-                            placeholder="URL"
+                            placeholder="Title"
                             className="w-full p-2 border border-gray-300 rounded-md"
-                            value={exhibit.url}
-                            onChange={(e) => handleExhibitChange(index, "url", e.target.value)}
+                            value={exhibit.title}
+                            onChange={(e) => handleExhibitChange(index, "title", e.target.value)}
                         />
-                    )}
+                    </div>
+                    <div className="mb-2">
+                        <label className="block text-sm font-medium mb-1">Exhibit Format:</label>
+                        <select
+                            className="w-full p-2 border border-gray-300 rounded-md"
+                            value={exhibit.exhibit_format}
+                            onChange={(e) => handleExhibitChange(index, "exhibit_format", e.target.value)}
+                        >
+                            <option value="">Select Format</option>
+                            <option value="Images">Images</option>
+                            <option value="Videos">Videos</option>
+                            <option value="Embeds">Embeds</option>
+                            <option value="Texts">Texts</option>
+                        </select>
+                    </div>
 
-                    {/* Show text and font inputs for text exhibits */}
-                    {exhibit.exhibit_format === "Texts" && (
-                        <>
+                    {(exhibit.exhibit_format === "Images" || exhibit.exhibit_format === "Videos" || exhibit.exhibit_format === "Embeds") && (
+                        <div className="mb-2">
                             <input
                                 type="text"
-                                placeholder="Text"
-                                className="w-full p-2 border border-gray-300 rounded-md mb-2"
-                                value={exhibit.text}
-                                onChange={(e) => handleExhibitChange(index, "text", e.target.value)}
-                            />
-                            <select
+                                placeholder="URL"
                                 className="w-full p-2 border border-gray-300 rounded-md"
-                                value={exhibit.font}
-                                onChange={(e) => handleExhibitChange(index, "font", e.target.value)}
-                            >
-                                <option value="">Select Font</option>
-                                <option value="sans">Sans</option>
-                                <option value="serif">Serif</option>
-                                <option value="mono">Mono</option>
-                            </select>
+                                value={exhibit.url}
+                                onChange={(e) => handleExhibitChange(index, "url", e.target.value)}
+                            />
+                        </div>
+                    )}
+
+                    {exhibit.exhibit_format === "Texts" && (
+                        <>
+                            <div className="mb-2">
+                                <input
+                                    type="text"
+                                    placeholder="Text"
+                                    className="w-full p-2 border border-gray-300 rounded-md"
+                                    value={exhibit.text}
+                                    onChange={(e) => handleExhibitChange(index, "text", e.target.value)}
+                                />
+                            </div>
+                            <div className="mb-2">
+                                <label className="block text-sm font-medium mb-1">Font:</label>
+                                <select
+                                    className="w-full p-2 border border-gray-300 rounded-md"
+                                    value={exhibit.font}
+                                    onChange={(e) => handleExhibitChange(index, "font", e.target.value)}
+                                >
+                                    <option value="">Select Font</option>
+                                    <option value="sans">Sans</option>
+                                    <option value="serif">Serif</option>
+                                    <option value="mono">Mono</option>
+                                </select>
+                            </div>
                         </>
                     )}
                 </div>
             ))}
 
-            {error && <p className="text-red-500 mt-4">{error}</p>}
+            <button
+                className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 mb-4"
+                onClick={addExhibit}
+            >
+                Add Exhibit
+            </button>
 
             <button
-                className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 mt-4"
+                className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
                 onClick={handleSubmit}
             >
                 Save Changes
             </button>
+
+            {error && <p className="text-red-500 mt-4">{error}</p>}
         </div>
     );
 }
