@@ -1,11 +1,8 @@
-'use client';
+"use client";
 
 import { useState, useEffect } from 'react';
-// import Image from 'next/image';
 import { useRouter } from 'next/navigation'; // Import useRouter
 import Navbar from '../../components/Navbar';
-
-
 
 export default function Dashboard() {
     const [email, setEmail] = useState(null);
@@ -54,52 +51,6 @@ export default function Dashboard() {
     // ACTUAL DASHBOARD
     return (
         <div className="bg-background font-helvetica text-white min-h-screen">
-            {/* MENU BAR */}
-            {/* <div className="bg-gradient-to-r from-[#12171D] via-[rgba(7,68,89,0.2)] to-[rgba(0,0,0,0.2)] border-[#12171D] shadow-md flex items-start p-[20px_100px] justify-end space-x-[80px]">
-                <div className="flex items-start space-x-[5px]">
-                    <Image
-                        src="/profile-icon.svg"
-                        width={28}
-                        height={28}
-                        alt="Profile Icon"
-                    />
-                    <p className="text-white font-helvetica text-[18px] font-bold">{username}</p>
-                </div>
-                
-                <div role="button"
-                    className="flex items-start space-x-[5px]"
-                    onClick={async () => {
-                        try {
-                            const response = await fetch('http://localhost:5000/api/logout', {
-                                method: 'POST',
-                                credentials: 'include',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                },
-                            });
-
-                            if (response.ok) {
-                                // Handle successful logout
-                                console.log('Logged out successfully');
-                                // Redirect to login or home page
-                                window.location.href = '/login';
-                            } else {
-                                console.error('Logout failed');
-                            }
-                        } catch (error) {
-                            console.error('Error logging out:', error);
-                        }
-                    }}>
-                    <Image
-                        src="/logout-icon.svg"
-                        width={28}
-                        height={28}
-                        alt="Logout Icon"
-                    />
-                    <p className="text-[#55D3FF] font-helvetica text-[18px] font-bold hover:text-[#9fe5ff]">Logout</p>
-                </div>
-            </div> */}
-
             <Navbar username={username}/>
 
             <div className="flex flex-col items-start gap-8 flex-1 self-stretch md:p-[60px_100px] p-[60px_35px]">
@@ -115,7 +66,12 @@ export default function Dashboard() {
 
                 <div className="flex flex-wrap justify-start gap-10 border-[#ffffff]">
                     {collections.map((collection, index) => (
-                        <div key={index} role="button" className="flex-grow min-w-[410px] flex-basis-[33.33%] h-[200px] flex-shrink-0 rounded-[20px] border border-[#cfcfcf1a] bg-[#12171D] hover:bg-[#22272E] relative">
+                        <div
+                            key={index}
+                            role="button"
+                            className="flex-grow min-w-[410px] flex-basis-[33.33%] h-[200px] flex-shrink-0 rounded-[20px] border border-[#cfcfcf1a] bg-[#12171D] hover:bg-[#22272E] relative"
+                            onClick={() => router.push(`/collection/${collection.url}`)} // Navigate to collection URL
+                        >
                             <p className="w-[328px] h-[35px] text-white font-helvetica text-[24px] font-bold absolute left-[35px] top-[40px]">
                                 {collection.title}
                             </p>
