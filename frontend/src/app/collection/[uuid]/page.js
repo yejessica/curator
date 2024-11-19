@@ -105,12 +105,17 @@ export default function Collection({ params: paramsPromise }) {
     }
 
     return (
-        <div className="bg-background font-helvetica text-white min-h-screen">
-            <Navbar username={username} />
+        <div className="bg-background font-helvetica text-white min-h-screen w-fill overflow-x-hidden">
+            {/* <h1>Collection Exhibits</h1> */}
 
+            <Navbar username={username}/>
+            
             <div className="flex flex-col items-start gap-[30px] self-stretch md:p-[60px_100px] p-[60px_35px]">
-                <div className="flex items-center gap-[272px] self-stretch flex-wrap">
-                    <div className="flex flex-col w-[812px] justify-center items-start gap-[18px]">
+                {/* TOP INFO BAR AREA */}
+                <div className="flex items-center justify-between self-stretch flex-wrap gap-[15px]">
+                    {/* LEFT COL */}
+                    <div className="flex flex-col w-[300px] justify-center items-start gap-[18px]">
+                        {/* TITLE, USERNAME */}
                         <div className="flex flex-col w-[812px] justify-center items-start gap-[4px]">
                             <h1 className="text-white font-helvetica text-[32px] font-bold">{title}</h1>
                             <h3 className="text-[#BDC1C6] font-helvetica text-xl font-medium">@{collection_username}</h3>
@@ -158,26 +163,18 @@ export default function Collection({ params: paramsPromise }) {
                     </div>
                 </div>
 
-                <div className="flex flex-wrap flex-start self-stretch gap-[20px] break-words">
+                {/* ALL THE EXHIBITS DISPLAYED */}
+                <div className="flex flex-wrap items-start self-stretch gap-[20px] break-words ">
+                    
                     {exhibits.map((exhibit, index) => (
-                        <div key={index} className="w-full lg:w-[30%] xl:w-[30%] p-4 border rounded-lg shadow-lg">
-                            <h2>{exhibit.title}</h2>
-                            <p>Created At: {new Date(exhibit.created_at).toLocaleDateString()}</p>
-                            <p>Format: {exhibit.exhibit_format}</p>
-                            <p>Coordinates: ({exhibit.xcoord}, {exhibit.ycoord})</p>
-                            <p>Dimensions: {exhibit.width} x {exhibit.height}</p>
-                            <h3>Tags:</h3>
-                            <ul>
-                                {exhibit.tags.map((tag, index) => (
-                                    <li key={index}>{tag}</li>
-                                ))}
-                            </ul>
+                        <div key={index} className="w-full md:w-[48%] lg:w-[31%] xl:w-[32%] p-4 border rounded-lg shadow-lg block">
+                            
 
                             {exhibit.exhibit_format === "Images" && (
                                 <div>
-                                    <h3>Images:</h3>
+                                    {/* <h3>Images:</h3> */}
                                     {exhibit.format_specific.images.map((image, index) => (
-                                        <p key={index}>URL: {image.url}</p>
+                                    <img key={index} src={image.url} alt={exhibit.title} className="w-full object-contain" />
                                     ))}
                                 </div>
                             )}
@@ -205,12 +202,38 @@ export default function Collection({ params: paramsPromise }) {
 
                             {exhibit.exhibit_format === "Videos" && (
                                 <div>
-                                    <h3>Videos:</h3>
-                                    {exhibit.format_specific.videos.map((video, index) => (
-                                        <p key={index}>URL: {video.url}</p>
-                                    ))}
+                                <h3>Videos:</h3>
+                                {exhibit.format_specific.videos.map((video, index) => (
+                                    <iframe key={index}
+                                    src={video.url}>
+                                    </iframe>
+                                    // <p key={index}>URL: {video.url}</p>
+                                ))}
+
+                                {/* <iframe width="420" height="315"
+                                src="https://www.youtube.com/embed/tgbNymZ7vqY">
+                                </iframe> */}
+
                                 </div>
                             )}
+                            <div className='text-[#c5c9cd] font-helvetica text-[18px] flex flex-wrap justify-between break-words'>
+                                <p className='font-bold'>{exhibit.title}</p>
+                                <p>{new Date(exhibit.created_at).toLocaleDateString()}</p>
+                            </div>
+                            
+                            
+                            
+                            {/* <p>Format: {exhibit.exhibit_format}</p>
+                            <p>Coordinates: ({exhibit.xcoord}, {exhibit.ycoord})</p>
+                            <p>Dimensions: {exhibit.width} x {exhibit.height}</p> */}
+
+                            {/* TAGS!! REVISIT!! */}
+                            {/* <h3>Tags:</h3>
+                            <ul>
+                                {exhibit.tags.map((tag, index) => (
+                                <li key={index}>{tag}</li>
+                                ))}
+                            </ul> */}
                         </div>
                     ))}
                 </div>
