@@ -48,13 +48,23 @@ export default function Collection({ params: paramsPromise }) {
         fetchProfile();
     }, []);
 
-    // Fetch data only when `uuid` is set
+    // Fetch data and increment views only when `uuid` is set
     useEffect(() => {
         if (!uuid) return;
 
         const fetchData = async () => {
             try {
-                const res = await fetch(`http://localhost:5000/api/collection/${uuid}`);
+                // Increment views
+                await fetch(`http://localhost:5000/api/collection/${uuid}/increment-views`, {
+                    method: 'POST',
+                    credentials: 'include',
+                });
+
+                // Fetch collection data
+                const res = await fetch(`http://localhost:5000/api/collection/${uuid}`, {
+                    credentials: 'include'
+                });
+
                 if (!res.ok) {
                     throw new Error('Failed to fetch data');
                 }
