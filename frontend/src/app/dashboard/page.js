@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 // import Image from 'next/image';
 import { useRouter } from 'next/navigation'; // Import useRouter
-import Navbar from '../../components/navbar';
+import Navbar from '../../components/Navbar';
 
 
 
