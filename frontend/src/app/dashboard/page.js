@@ -1,8 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
+// import Image from 'next/image';
 import { useRouter } from 'next/navigation'; // Import useRouter
+import Navbar from '../../components/navbar';
+
+
 
 export default function Dashboard() {
     const [email, setEmail] = useState(null);
@@ -52,7 +55,7 @@ export default function Dashboard() {
     return (
         <div className="bg-background font-helvetica text-white min-h-screen">
             {/* MENU BAR */}
-            <div className="bg-gradient-to-r from-[#12171D] via-[rgba(7,68,89,0.2)] to-[rgba(0,0,0,0.2)] border-[#12171D] shadow-md flex items-start p-[20px_100px] justify-end space-x-[80px]">
+            {/* <div className="bg-gradient-to-r from-[#12171D] via-[rgba(7,68,89,0.2)] to-[rgba(0,0,0,0.2)] border-[#12171D] shadow-md flex items-start p-[20px_100px] justify-end space-x-[80px]">
                 <div className="flex items-start space-x-[5px]">
                     <Image
                         src="/profile-icon.svg"
@@ -95,7 +98,9 @@ export default function Dashboard() {
                     />
                     <p className="text-[#55D3FF] font-helvetica text-[18px] font-bold hover:text-[#9fe5ff]">Logout</p>
                 </div>
-            </div>
+            </div> */}
+
+            <Navbar username={username}/>
 
             <div className="flex flex-col items-start gap-8 flex-1 self-stretch md:p-[60px_100px] p-[60px_35px]">
                 <div className="flex justify-between border-[#ffffff] w-[100%]">

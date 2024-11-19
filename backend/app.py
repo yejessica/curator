@@ -134,7 +134,8 @@ def logout():
 @app.route('/api/profile', methods=['GET'])
 def profile():
     if 'email' in session:
-        return jsonify({"message": f"User profile for {session['email']}"}), 200
+        # return jsonify({"message": f"User profile for {session['email']}"}), 200
+        return jsonify({"email": session['email'], "username": session['username']})
     else:
         return jsonify({"error": "User not logged in."}), 401
 
@@ -207,6 +208,33 @@ def get_collection_data(url):
         collection_id = result[0]
         # print(collection_id)
                   
+        # Get collection-related information
+        query = text("""
+            SELECT * FROM collections WHERE collections.collection_id = :collection_id
+        """)
+
+        result = g.conn.execute(query, {"collection_id": collection_id}).fetchone()
+        title = result[2]
+        views = result[3]
+        likes = result[4]
+        user_id = result[5]
+
+        print("Debug: Successfully collected information (title, views, likes, user_id) about collection")
+
+        if result is None:
+            raise ValueError("No collection found for the given URL.")
+        
+        # Get the collection owner's username
+        query = text("""
+            SELECT * FROM users WHERE users.user_id = :user_id
+        """)
+        result = g.conn.execute(query, {"user_id": user_id}).fetchone()
+
+        collection_username = result[1]
+
+        if result is None:
+            raise ValueError("No username found for the given user_id")
+
         
         # Step 1: Fetch all exhibits and their tags in one query
         query = text("""
@@ -289,7 +317,8 @@ def get_collection_data(url):
                 print(f"Debug: Found {len(exhibit['format_specific']['texts'])} text(s) for exhibit ID: {exhibit_id}")
 
         print("Debug: Successfully fetched all format-specific data.")
-        return jsonify({"exhibits": list(exhibit_dict.values())}), 200
+        print(exhibit["format_specific"])
+        return jsonify({"exhibits": list(exhibit_dict.values()), "title": title, "views": views, "likes": likes, "collection_username": collection_username}), 200
 
     except Exception as e:
         print(f"Debug: Exception occurred: {e}")
