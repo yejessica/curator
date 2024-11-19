@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation'; // Import useRouter
-import Navbar from '../../components/Navbar';
+import Navbar from '../../components/navbar';
 
 export default function Dashboard() {
     const [email, setEmail] = useState(null);

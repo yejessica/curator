@@ -317,7 +317,7 @@ def get_collection_data(url):
                 print(f"Debug: Found {len(exhibit['format_specific']['texts'])} text(s) for exhibit ID: {exhibit_id}")
 
         print("Debug: Successfully fetched all format-specific data.")
-        print(exhibit["format_specific"])
+        # print(exhibit["format_specific"])
         return jsonify({"exhibits": list(exhibit_dict.values()), "title": title, "views": views, "likes": likes, "collection_username": collection_username}), 200
 
     except Exception as e:
