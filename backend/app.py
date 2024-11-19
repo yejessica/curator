@@ -494,6 +494,141 @@ def create_collection():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# Endpoint to fetch collection data for editing
+@app.route('/api/collection/<url>/edit', methods=['GET'])
+def get_collection_for_edit(url):
+    if 'email' not in session:
+        return jsonify({"error": "User is not logged in"}), 401
+
+    email = session['email']
+
+    try:
+        # Get the collection's user_id to verify ownership
+        collection_query = text("""
+            SELECT c.collection_id, c.title, c.user_id
+            FROM Collections c
+            JOIN Users u ON c.user_id = u.user_id
+            WHERE c.url = :url AND u.email = :email
+        """)
+        result = g.conn.execute(collection_query, {"url": url, "email": email}).fetchone()
+
+        if not result:
+            return jsonify({"error": "Collection not found or user is not the owner"}), 403
+
+        collection_id = result[0]
+        collection_title = result[1]
+
+        # Fetch all exhibits for the collection
+        exhibits_query = text("""
+            SELECT e.exhibit_id, e.title, e.exhibit_format, i.url AS image_url, v.url AS video_url, 
+                   em.url AS embed_url, t.text, t.font
+            FROM Exhibits e
+            LEFT JOIN Images i ON e.exhibit_id = i.exhibit_id
+            LEFT JOIN Videos v ON e.exhibit_id = v.exhibit_id
+            LEFT JOIN Embeds em ON e.exhibit_id = em.exhibit_id
+            LEFT JOIN Texts t ON e.exhibit_id = t.exhibit_id
+            WHERE e.collection_id = :collection_id
+        """)
+        exhibits_result = g.conn.execute(exhibits_query, {"collection_id": collection_id}).fetchall()
+
+        exhibits = []
+        for row in exhibits_result:
+            exhibit = {
+                "exhibit_id": row[0],
+                "title": row[1],
+                "exhibit_format": row[2],
+                "url": row[3] or row[4] or row[5] or "",  # Get the appropriate URL
+                "text": row[6] or "",
+                "font": row[7] or ""
+            }
+            exhibits.append(exhibit)
+
+        return jsonify({"collection_id": collection_id, "title": collection_title, "exhibits": exhibits}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# Endpoint to update a collection
+@app.route('/api/collection/<url>/edit', methods=['POST'])
+def update_collection(url):
+    if 'email' not in session:
+        return jsonify({"error": "User is not logged in"}), 401
+
+    email = session['email']
+
+    try:
+        # Verify ownership
+        user_query = text("""
+            SELECT c.collection_id, c.user_id
+            FROM Collections c
+            JOIN Users u ON c.user_id = u.user_id
+            WHERE c.url = :url AND u.email = :email
+        """)
+        result = g.conn.execute(user_query, {"url": url, "email": email}).fetchone()
+
+        if not result:
+            return jsonify({"error": "Collection not found or user is not the owner"}), 403
+
+        collection_id = result[0]
+
+        # Get updated data from the request
+        data = request.get_json()
+        new_title = data.get('title')
+        new_exhibits = data.get('exhibits', [])
+
+        # Update the collection title
+        update_title_query = text("""
+            UPDATE Collections SET title = :title WHERE collection_id = :collection_id
+        """)
+        g.conn.execute(update_title_query, {"title": new_title, "collection_id": collection_id})
+
+        # Delete old exhibits
+        delete_exhibits_query = text("DELETE FROM Exhibits WHERE collection_id = :collection_id")
+        g.conn.execute(delete_exhibits_query, {"collection_id": collection_id})
+
+        # Re-insert updated exhibits
+        for exhibit in new_exhibits:
+            exhibit_id = exhibit.get("exhibit_id", str(uuid.uuid4()))
+            exhibit_format = exhibit.get("exhibit_format", "")
+            title = exhibit.get("title", "")
+
+            # Insert into exhibits table
+            insert_exhibit_query = text("""
+                INSERT INTO Exhibits (exhibit_id, collection_id, title, exhibit_format, xcoord, ycoord, height, width, user_id)
+                VALUES (:exhibit_id, :collection_id, :title, :exhibit_format, 0, 0, 100, 100, :user_id)
+            """)
+            g.conn.execute(insert_exhibit_query, {
+                "exhibit_id": exhibit_id,
+                "collection_id": collection_id,
+                "title": title,
+                "exhibit_format": exhibit_format,
+                "user_id": result[1]  # Use the user_id from the ownership check
+            })
+
+            # Handle format-specific data
+            if exhibit_format == "Images":
+                image_url = exhibit.get("url", "")
+                insert_image_query = text("INSERT INTO Images (image_id, exhibit_id, url) VALUES (:image_id, :exhibit_id, :url)")
+                g.conn.execute(insert_image_query, {"image_id": str(uuid.uuid4()), "exhibit_id": exhibit_id, "url": image_url})
+
+            elif exhibit_format == "Videos":
+                video_url = exhibit.get("url", "")
+                insert_video_query = text("INSERT INTO Videos (video_id, exhibit_id, url) VALUES (:video_id, :exhibit_id, :url)")
+                g.conn.execute(insert_video_query, {"video_id": str(uuid.uuid4()), "exhibit_id": exhibit_id, "url": video_url})
+
+            elif exhibit_format == "Embeds":
+                embed_url = exhibit.get("url", "")
+                insert_embed_query = text("INSERT INTO Embeds (embed_id, exhibit_id, url) VALUES (:embed_id, :exhibit_id, :url)")
+                g.conn.execute(insert_embed_query, {"embed_id": str(uuid.uuid4()), "exhibit_id": exhibit_id, "url": embed_url})
+
+            elif exhibit_format == "Texts":
+                text_content = exhibit.get("text", "")
+                font = exhibit.get("font", "")
+                insert_text_query = text("INSERT INTO Texts (text_id, exhibit_id, text, font) VALUES (:text_id, :exhibit_id, :text, :font)")
+                g.conn.execute(insert_text_query, {"text_id": str(uuid.uuid4()), "exhibit_id": exhibit_id, "text": text_content, "font": font})
+
+        return jsonify({"message": "Collection updated successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5000)
