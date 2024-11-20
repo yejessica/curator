@@ -13,8 +13,8 @@ import urllib.parse
 
 
 app = Flask(__name__)
-# CORS(app, supports_credentials=True)
-CORS(app, origins=["https://curator-smoky.vercel.app"], supports_credentials=True)
+CORS(app, supports_credentials=True)
+# CORS(app, origins=["https://curator-smoky.vercel.app"], supports_credentials=True)
 
 
 # Use the provided secret key
@@ -1108,4 +1108,12 @@ def get_collection_id_from_url(url):
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0', port=5000, ssl_context="adhoc")
+    app.run(
+        debug=True,
+        host='0.0.0.0',
+        port=5000,
+        ssl_context=(
+            '/etc/letsencrypt/live/curation.my/fullchain.pem',  # Path to the certificate
+            '/etc/letsencrypt/live/curation.my/privkey.pem'     # Path to the private key
+        )
+    )
