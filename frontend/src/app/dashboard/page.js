@@ -66,7 +66,7 @@ export default function Dashboard() {
         <div className="bg-background font-helvetica text-white min-h-screen">
             <Navbar username={username} />
 
-            <div className="flex flex-col items-start gap-8 flex-1 self-stretch md:p-[60px_100px] p-[60px_35px]">
+            <div className="flex flex-col items-start gap-6 flex-1 self-stretch md:p-[60px_100px] p-[60px_35px]">
                 <div className="flex justify-between border-[#ffffff] w-[100%]">
                     <p className="w-[812px] text-white font-helvetica text-4xl font-bold">My Collections</p>
                     <button
@@ -76,6 +76,7 @@ export default function Dashboard() {
                         New
                     </button>
                 </div>
+                <p className='text-xl'>Click on a collection to edit it.</p>
 
                 <div className="flex flex-wrap justify-start gap-10 border-[#ffffff]">
                     {collections.map((collection, index) => (

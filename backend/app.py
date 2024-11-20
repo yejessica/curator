@@ -8,6 +8,8 @@ import uuid
 import random
 import string
 import re
+import urllib.parse
+
 
 
 app = Flask(__name__)
@@ -49,6 +51,25 @@ def teardown_request(exception):
         pass
 
 # Endpoint for user registration
+# Cleaning
+
+def clean_username(username):
+    if not re.match("^[a-zA-Z0-9_]+$", username):
+        raise ValueError("Username contains invalid characters.")
+    return username.strip()
+
+def clean_email(email):
+    email_regex = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
+    if not re.match(email_regex, email):
+        raise ValueError("Invalid email format.")
+    return email.strip()
+
+def clean_password(password):
+    if len(password) < 8:  # Adjust password length criteria as needed
+        raise ValueError("Password must be at least 8 characters long.")
+    return password
+
+
 @app.route('/api/register', methods=['POST'])
 def register():
     data = request.get_json()
@@ -61,6 +82,11 @@ def register():
 
     try:
         # Check if the user already exists
+        clean_email(email)
+        cleaned_username = clean_username(username)
+        cleaned_password = clean_password(password)
+
+
         existing_user = g.conn.execute(
             text("SELECT * FROM Users WHERE email = :email"),
             {"email": email}
@@ -70,23 +96,26 @@ def register():
             return jsonify({"error": "Email is already registered."}), 409
 
         # Hash the password
-        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        hashed_password = bcrypt.hashpw(cleaned_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
         # Create the uuid
         random_uuid = uuid.uuid4()
         # Insert the new user into the database
         g.conn.execute(
             text("INSERT INTO Users (user_id, username, email, password) VALUES (:user_id, :username, :email, :password)"),
-            {"user_id": random_uuid, "username": username, "email": email, "password": hashed_password}
+            {"user_id": random_uuid, "username": cleaned_username, "email": email, "password": hashed_password}
         )
         g.conn.commit()
 
         print(f"User {email} successfully registered.")
         return jsonify({"message": "Registration successful!"}), 201
 
+    except ValueError as ve:
+        return jsonify({"error": str(ve)}), 400
     except Exception as e:
         print(f"Error during registration: {e}")
         return jsonify({"error": "An error occurred during registration."}), 500
+
 
 
 
@@ -98,6 +127,9 @@ def login():
     password = data.get('password')
 
     try:
+        clean_email(email)
+        clean_password(password)
+
         user = g.conn.execute(
             text("SELECT * FROM Users WHERE email = :email"),
             {"email": email}
@@ -118,9 +150,12 @@ def login():
         print(f"User {email} successfully logged in.")
 
         return jsonify({"message": "Login successful!"}), 200
+    except ValueError as ve:
+        return jsonify({"error": str(ve)}), 400
     except Exception as e:
         print(f"Error during login: {e}")
         return jsonify({"error": "An error occurred during login."}), 500
+
 
 # Endpoint for logout
 @app.route('/api/logout', methods=['GET', 'POST'])
@@ -453,6 +488,8 @@ def create_collection():
                 "user_id": user_id
             })
 
+            print(exhibit_format)
+
             # Insert format-specific data based on the exhibit_format
             if exhibit_format == "Images":
                 image_id = str(uuid.uuid4())
@@ -486,7 +523,7 @@ def create_collection():
                 
                 youtubeUrl = extract_video_id(video_url)
                 if (youtubeUrl): #is a youtube url
-                    video_url = youtubeUrl
+                    video_url = "https://www.youtube.com/embed/"+youtubeUrl
 
                 print(video_url)
                 insert_video_query = text("INSERT INTO videos (video_id, exhibit_id, url) VALUES (:video_id, :exhibit_id, :url)")
@@ -496,20 +533,38 @@ def create_collection():
                     "url": video_url
                 })
 
-            elif exhibit_format == "Embeds":
-                embed_id = str(uuid.uuid4())
                 
 
-                insert_embed_query = text("INSERT INTO embeds (embed_id, exhibit_id, url) VALUES (:embed_id, :exhibit_id, :url)")
+
+            
+            elif exhibit_format == "Embeds":
+                embed_id = str(uuid.uuid4())
+                embed_url = exhibit.get('url', '')
+                # encoded_url = urllib.parse.quote(embed_url)
+
+                
+                # print(exhibit.get('url', ''))
+                # print(embed_id)
+                # try:
+                insert_embed_query = text("INSERT INTO embeds (embed_id, url, exhibit_id) VALUES (:embed_id, :url, :exhibit_id)")
                 g.conn.execute(insert_embed_query, {
                     "embed_id": embed_id,
                     "exhibit_id": exhibit_uuid,
-                    "url": exhibit.get('url', '')
+                    "url": embed_url
                 })
+
+                # g.conn.commit()
+                print("Record inserted successfully")
+            
+
+                # print("hi!!")
+
+                
 
             elif exhibit_format == "Texts":
                 text_id = str(uuid.uuid4())
                 insert_text_query = text("INSERT INTO texts (text_id, exhibit_id, text, font) VALUES (:text_id, :exhibit_id, :text, :font)")
+                
                 g.conn.execute(insert_text_query, {
                     "text_id": text_id,
                     "exhibit_id": exhibit_uuid,
@@ -663,7 +718,7 @@ def update_collection(url):
                 
                 youtubeUrl = extract_video_id(video_url)
                 if (youtubeUrl): #is a youtube url
-                    video_url = youtubeUrl
+                    video_url = "https://www.youtube.com/embed/"+youtubeUrl
 
                 print(video_url)
                 insert_video_query = text("INSERT INTO videos (video_id, exhibit_id, url) VALUES (:video_id, :exhibit_id, :url)")
@@ -675,7 +730,7 @@ def update_collection(url):
 
             elif exhibit_format == "Embeds":
                 embed_url = exhibit.get("url", "")
-                
+                print("Debug: Embed url "+embed_url)
                 insert_embed_query = text("INSERT INTO Embeds (embed_id, exhibit_id, url) VALUES (:embed_id, :exhibit_id, :url)")
                 g.conn.execute(insert_embed_query, {"embed_id": str(uuid.uuid4()), "exhibit_id": exhibit_id, "url": embed_url})
 
@@ -967,6 +1022,74 @@ def add_comment(url):
         return jsonify({"message": "Comment added successfully"}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+# Add tags to an exhibit
+@app.route('/api/exhibit/<exhibit_id>/tag', methods=['POST'])
+def add_tag(exhibit_id):
+    if 'email' not in session:
+        return jsonify({"error": "User not logged in"}), 401
+
+    data = request.get_json()  # Retrieve JSON data from the request body
+    tag_name = data.get('tag_name')  # Extract tag name from the request body
+
+    if not tag_name:
+        return jsonify({'error': 'Tag name is required'}), 400
+
+    # Validate the tag name
+    valid_tags = ['Inspirational', 'Interesting', 'Creative', 'To Buy']
+    if tag_name not in valid_tags:
+        return jsonify({'error': 'Invalid tag name'}), 400
+
+    try:
+        # Get user_id from email
+        user_query = text("SELECT user_id FROM Users WHERE email = :email")
+        user_result = g.conn.execute(user_query, {"email": session['email']}).fetchone()
+        if not user_result:
+            return jsonify({"error": "User not found"}), 404
+
+        user_id = user_result[0]
+
+        # Insert the new tag for the exhibit
+        insert_tag_query = text("""
+            INSERT INTO tags (exhibit_id, name, user_id)
+            VALUES (:exhibit_id, :name, :user_id)
+        """)
+        g.conn.execute(insert_tag_query, {
+            "exhibit_id": exhibit_id,
+            "name": tag_name,
+            "user_id": user_id
+        })
+        g.conn.commit()
+
+        return jsonify({'message': 'Tag added successfully'}), 201
+
+    except Exception as e:
+        g.conn.rollback()  # Rollback on error
+        return jsonify({'error': str(e)}), 500
+    
+@app.route('/api/exhibit/<exhibit_id>/tags', methods=['GET'])
+def get_tags_for_exhibit(exhibit_id):
+    try:
+        # Get all tags for the exhibit, along with their counts
+        sql = text("""
+            SELECT name, COUNT(*) AS count
+            FROM tags
+            WHERE exhibit_id = :exhibit_id
+            GROUP BY name
+        """)
+        result = g.conn.execute(sql, {"exhibit_id": exhibit_id}).fetchall()
+
+        if not result:
+            return jsonify({'message': 'No tags found for this exhibit'}), 404
+
+        # Format the tags into a dictionary with tag names as keys and counts as values
+        tag_counts = {tag[0]: tag[1] for tag in result}
+
+        return jsonify({'tags': tag_counts}), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5000)

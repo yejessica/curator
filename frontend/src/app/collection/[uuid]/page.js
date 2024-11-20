@@ -171,25 +171,28 @@ export default function Collection({ params: paramsPromise }) {
     return (
         <div className="bg-background font-helvetica text-white min-h-screen w-fill overflow-x-hidden">
             <Navbar username={username} />
-
+            {/* Top info bar */}
             <div className="flex flex-col items-start gap-[30px] self-stretch md:p-[60px_100px] p-[60px_35px]">
                 <div className="flex items-center justify-between self-stretch flex-wrap gap-[15px]">
+                    {/* Left Col */}
                     <div className="flex flex-col w-[300px] justify-center items-start gap-[18px]">
+                        {/* Username/title */}
                         <div className="flex flex-col w-[812px] justify-center items-start gap-[4px]">
                             <h1 className="text-white font-helvetica text-[32px] font-bold">{title}</h1>
                             <h3 className="text-[#BDC1C6] font-helvetica text-xl font-medium">@{collection_username}</h3>
                         </div>
+                        {/* Buttons */}
                         <div className="flex items-start gap-[15px] w-full p-0 m-0">
                             <div
                                 role="button"
-                                className="w-[45px] h-[45px] shrink-0 rounded-[16px] bg-[#086788] flex justify-center items-center"
+                                className="w-[45px] h-[45px] shrink-0 rounded-[16px] bg-[#086788] flex justify-center items-center hover:bg-[#55b0cf]"
                                 onClick={handleLike}
                             >
                                 <Image src="/like.svg" width={32} height={32} alt="Like Icon" />
                             </div>
                             <div
                                 role="button"
-                                className="w-[45px] h-[45px] shrink-0 rounded-[16px] bg-[#086788] flex justify-center items-center"
+                                className="w-[45px] h-[45px] shrink-0 rounded-[16px] bg-[#086788] flex justify-center items-center hover:bg-[#55b0cf]"
                                 onClick={() => setShowCommentModal(true)}
                             >
                                 <Image src="/comment.svg" width={32} height={32} alt="Comment Icon" />
@@ -197,14 +200,28 @@ export default function Collection({ params: paramsPromise }) {
                             <div
                                 role="button"
                                 className={`w-[45px] h-[45px] shrink-0 rounded-[16px] ${
-                                    isSaved ? "bg-[#31819c]" : "bg-[#086788]"
+                                    isSaved ? "bg-[#baeeff]" : "bg-[#086788] hover:bg-[#55b0cf]"
                                 } flex justify-center items-center`}
                                 onClick={handleSaveToggle}
                             >
-                                <Image src="/save.svg" width={32} height={32} alt="Save Icon" />
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 32 32"
+                                    width="32"
+                                    height="32"
+                                    fill={isSaved ? "#086788" : "white"} // Dynamically sets the fill color
+                                >
+                                    <path 
+                                        // fill-rule="evenodd" 
+                                        // clip-rule="evenodd" 
+                                        d="M26 5.99832V27.9983C26 28.797 25.1099 29.2734 24.4453 28.8304L16 23.2013L7.5547 28.8304C6.92179 29.2523 6.08426 28.8403 6.00593 28.1102L6 27.9983V5.99832C6 4.34147 7.34315 2.99832 9 2.99832H23C24.6569 2.99832 26 4.34147 26 5.99832ZM8 26.1303L15.4453 21.1663C15.7812 20.9423 16.2188 20.9423 16.5547 21.1663L24 26.1293V5.99832C24 5.48549 23.614 5.06281 23.1166 5.00505L23 4.99832H9C8.44772 4.99832 8 5.44604 8 5.99832V26.1303Z"
+                                    />
+                                </svg>
                             </div>
+
                         </div>
                     </div>
+                    {/* Right Col: Views/likes */}
                     <div className="flex justify-center items-center gap-[20px]">
                         <div>
                             <p className="text-[#F9F9F9] text-center font-helvetica text-[15px] font-bold">VIEWS</p>
@@ -216,10 +233,12 @@ export default function Collection({ params: paramsPromise }) {
                         </div>
                     </div>
                 </div>
-
+            {/* Display exhibits */}
                 <div className="flex flex-wrap items-start self-stretch gap-[20px] break-words">
+                {/* <div className="grid grid-cols-3 gap-[20px] items-start self-stretch break-words"> */}
                     {exhibits.map((exhibit, index) => (
-                        <div key={index} className="w-full md:w-[48%] lg:w-[31%] xl:w-[32%] p-4 border rounded-lg shadow-lg block">
+
+                            <div key={index} className="w-full md:w-[48%] lg:w-[31%] xl:w-[32%] p-4 border-2 border-[#cfcfcf1a] rounded-lg shadow-lg block">
                             {exhibit.exhibit_format === "Images" && (
                                 <div>
                                     {exhibit.format_specific.images.map((image, index) => (
@@ -229,34 +248,88 @@ export default function Collection({ params: paramsPromise }) {
                             )}
                             {exhibit.exhibit_format === "Embeds" && (
                                 <div>
-                                    <h3>Embeds:</h3>
+                                    {/* <h3>Embeds:</h3> */}
                                     {exhibit.format_specific.embeds.map((embed, index) => (
-                                        <p key={index}>URL: {embed.url}</p>
+                                        // <p key={index}>URL: {embed.url}</p>
+                                        <div key={index} className='h-fill flex justify-center items-center'>
+                                            
+                                        <button className="w-[151px] h-[51px] bg-[#086788] hover:bg-[#5099b2] p-[3px_8px] text-[20px] rounded-[25px] font-semibold" key={index} onClick={() => window.open(embed.url, '_blank')}>
+                                            Click Here
+                                        </button>
+                                        </div>
                                     ))}
                                 </div>
                             )}
                             {exhibit.exhibit_format === "Texts" && (
                                 <div>
-                                    <h3>Texts:</h3>
-                                    {exhibit.format_specific.texts.map((textItem, index) => (
-                                        <div key={index}>
-                                            <p>Text: {textItem.text}</p>
-                                            <p>Font: {textItem.font}</p>
-                                        </div>
-                                    ))}
-                                </div>
+                                {exhibit.format_specific.texts.map((textItem, index) => {
+                                  // Determine the font class based on textItem.font
+                                  let fontClass = '';
+                                  let fontFamily = ''; // Variable to hold the inline font family
+                              
+                                  switch (textItem.font) {
+                                    case 'sans':
+                                      fontClass = 'font-sans';
+                                      fontFamily = 'Arial, sans-serif'; // Define the actual font family
+                                      break;
+                                    case 'serif':
+                                      fontClass = 'font-serif';
+                                      fontFamily = 'Times New Roman, serif'; // Define the actual font family
+                                      break;
+                                    case 'mono':
+                                      fontClass = 'font-mono';
+                                      fontFamily = 'Courier New, monospace'; // Define the actual font family
+                                      break;
+                                    default:
+                                      fontClass = 'font-sans';
+                                      fontFamily = 'Arial, sans-serif'; // Default font family
+                                  }
+                              
+                                  return (
+                                    <div key={index} className={fontClass} style={{ fontFamily }}>
+                                      <p className='text-[20px]'>{textItem.text}</p>
+                                      {/* <p>Font: {textItem.font}</p> */}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                              
+                              
+                              
                             )}
                             {exhibit.exhibit_format === "Videos" && (
+                                // <div className="relative w-full h-full pb-[56.25%] flex justify-center items-center">
                                 <div>
-                                    <h3>Videos:</h3>
+                                    {/* <h3>Videos:</h3> */}
+                                    
                                     {exhibit.format_specific.videos.map((video, index) => (
-                                        <iframe key={index} src={video.url}></iframe>
-                                    ))}
+                                        // <iframe key={index} src={video.url}></iframe>
+                                        
 
+                                        video.url.includes("https://www.youtube.com/embed/") ? (
+                                            <div key={index} className="relative w-full h-full pb-[56.25%] flex justify-center items-center">
+                                            <iframe 
+                                                // key={index} 
+                                                src={video.url}
+                                                className="absolute top-0 left-0 w-full h-full" 
+                                            ></iframe>
+                                            </div>
+                                        ) : (
+                                            <div key={index} className='h-fill flex justify-center items-center'>
+                                            
+                                            <button className="w-[151px] h-[51px] bg-[#086788] hover:bg-[#5099b2] p-[3px_8px] text-[20px] rounded-[25px] font-semibold" key={index} onClick={() => window.open(video.url, '_blank')}>
+                                                Watch Here
+                                            </button>
+                                            </div>
+                                        )
+                                        
+                                
+                                    ))}
+                                    
                                 
                                 </div>
                             )}
-                            <div className="text-[#c5c9cd] font-helvetica text-[18px] flex flex-wrap justify-between break-words">
+                            <div className="text-[#c5c9cd] font-helvetica text-[18px] flex flex-wrap justify-between break-words mt-3">
                                 <p className="font-bold">{exhibit.title}</p>
                                 <p>{new Date(exhibit.created_at).toLocaleDateString()}</p>
                             </div>
@@ -282,10 +355,10 @@ export default function Collection({ params: paramsPromise }) {
 
             {showCommentModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+                    <div className="bg-[#12171D] p-6 rounded-lg shadow-lg max-w-sm w-full">
                         <h3 className="text-xl font-bold mb-4">Add a Comment</h3>
                         <textarea
-                            className="w-full p-2 border border-gray-300 rounded-md mb-4 text-black"
+                            className="w-full p-2 border border-gray-300 rounded-md mb-4 text-white bg-[#696b6c]"
                             rows="4"
                             placeholder="Write your comment..."
                             value={newComment}
@@ -293,13 +366,13 @@ export default function Collection({ params: paramsPromise }) {
                         />
                         <div className="flex justify-end">
                             <button
-                                className="bg-red-500 text-white px-4 py-2 rounded-md mr-2"
+                                className="bg-[#8c2439] hover:bg-[#b25366] text-white px-4 py-2 rounded-md mr-2"
                                 onClick={() => setShowCommentModal(false)}
                             >
                                 Cancel
                             </button>
                             <button
-                                className="bg-blue-500 text-white px-4 py-2 rounded-md"
+                                className="bg-[#086788] hover:bg-[#5099b2] text-white px-4 py-2 rounded-md"
                                 onClick={handleAddComment}
                             >
                                 Comment

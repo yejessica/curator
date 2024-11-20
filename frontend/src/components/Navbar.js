@@ -1,8 +1,12 @@
 // components/Navbar.js
+'use client';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+
 
 
 const Navbar = ({ username }) => {
+    const router = useRouter();
     const handleLogout = async () => {
         try {
             const response = await fetch('http://localhost:5000/api/logout', {
@@ -24,9 +28,16 @@ const Navbar = ({ username }) => {
         }
     };
 
+    const goDashboard = () => {
+        router.push('/dashboard');
+    };
+
+
+    
+
     return (
         <div className="bg-gradient-to-r from-[#12171D] via-[rgba(7,68,89,0.2)] to-[rgba(0,0,0,0.2)] border-[#12171D] shadow-md flex items-start p-[20px_100px] justify-end space-x-[80px]">
-            <div className="flex items-start space-x-[5px]">
+            <div className="flex items-start space-x-[5px]" role = "button" onClick = {goDashboard}>
                 <Image
                     src="/profile-icon.svg"
                     width={28}
