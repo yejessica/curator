@@ -15,7 +15,7 @@ export default function Dashboard() {
     useEffect(() => {
         async function fetchEmail() {
             try {
-                const response = await fetch('http://localhost:5000/api/all-user-collections', {
+                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/all-user-collections`, {
                     credentials: 'include'
                 });
                 const data = await response.json();
@@ -34,7 +34,7 @@ export default function Dashboard() {
 
         async function fetchSavedCollections() {
             try {
-                const response = await fetch('http://localhost:5000/api/saved-collections', {
+                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/saved-collections`, {
                     credentials: 'include'
                 });
                 const data = await response.json();

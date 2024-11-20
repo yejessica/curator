@@ -31,7 +31,7 @@ export default function Collection({ params: paramsPromise }) {
         // Function to fetch collection_id from the URL
         const fetchCollectionId = async () => {
             try {
-                const response = await fetch(`http://localhost:5000/api/collection-id-from-url/${uuid}`);
+                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/collection-id-from-url/${uuid}`);
                 const data = await response.json();
                 if (response.ok) {
                     setCollectionId(data.collection_id);
@@ -59,7 +59,7 @@ export default function Collection({ params: paramsPromise }) {
     useEffect(() => {
         async function fetchProfile() {
             try {
-                const response = await fetch('http://localhost:5000/api/profile', {
+                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/profile`, {
                     credentials: 'include'
                 });
                 const data = await response.json();
@@ -84,13 +84,13 @@ export default function Collection({ params: paramsPromise }) {
         const fetchData = async () => {
             try {
                 // Increment views
-                await fetch(`http://localhost:5000/api/collection/${uuid}/increment-views`, {
+                await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/collection/${uuid}/increment-views`, {
                     method: 'POST',
                     credentials: 'include',
                 });
 
                 // Fetch collection data
-                const res = await fetch(`http://localhost:5000/api/collection/${uuid}`, {
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/collection/${uuid}`, {
                     credentials: 'include'
                 });
 
@@ -107,14 +107,14 @@ export default function Collection({ params: paramsPromise }) {
                 setSelectedExhibit(data.exhibits[0]?.exhibit_id || ""); // Default to first exhibit or empty string
 
                 // Check if the collection is saved
-                const savedRes = await fetch(`http://localhost:5000/api/collection/${uuid}/is-saved`, {
+                const savedRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/collection/${uuid}/is-saved`, {
                     credentials: 'include'
                 });
                 const savedData = await savedRes.json();
                 setIsSaved(savedData.is_saved);
 
                 // Fetch comments
-                const commentsRes = await fetch(`http://localhost:5000/api/collection/${uuid}/comments`, {
+                const commentsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/collection/${uuid}/comments`, {
                     credentials: 'include'
                 });
                 const commentsData = await commentsRes.json();
@@ -122,7 +122,7 @@ export default function Collection({ params: paramsPromise }) {
 
                 // Fetch tags for each exhibit
                 const tagsPromises = data.exhibits.map(async (exhibit) => {
-                    const tagRes = await fetch(`http://localhost:5000/api/exhibit/${exhibit.exhibit_id}/tags`);
+                    const tagRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/exhibit/${exhibit.exhibit_id}/tags`);
                     const tagData = await tagRes.json();
                     return { exhibitId: exhibit.exhibit_id, tags: tagData.tags || [] };
                 });
@@ -148,7 +148,7 @@ export default function Collection({ params: paramsPromise }) {
         }
     
         try {
-            const res = await fetch(`http://localhost:5000/api/exhibit/${exhibitId}/tags`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/exhibit/${exhibitId}/tags`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -162,7 +162,7 @@ export default function Collection({ params: paramsPromise }) {
             // alert(`Tag '${tagName}' added to exhibit ${exhibitId}!`);
     
             // Refresh tags for the exhibit
-            const tagRes = await fetch(`http://localhost:5000/api/exhibit/${exhibitId}/tags`);
+            const tagRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/exhibit/${exhibitId}/tags`);
             const tagData = await tagRes.json();
             setTags((prevTags) => ({ ...prevTags, [exhibitId]: tagData.tags || [] }));
             setShowTagModal(false);
@@ -175,7 +175,7 @@ export default function Collection({ params: paramsPromise }) {
 
     const handleLike = async () => {
         try {
-            const res = await fetch(`http://localhost:5000/api/collection/${uuid}/like`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/collection/${uuid}/like`, {
                 method: 'POST',
                 credentials: 'include',
             });
@@ -193,7 +193,7 @@ export default function Collection({ params: paramsPromise }) {
     const handleSaveToggle = async () => {
         try {
             const endpoint = isSaved ? 'unsave' : 'save';
-            const res = await fetch(`http://localhost:5000/api/collection/${uuid}/${endpoint}`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/collection/${uuid}/${endpoint}`, {
                 method: 'POST',
                 credentials: 'include',
             });
@@ -212,7 +212,7 @@ export default function Collection({ params: paramsPromise }) {
         if (!newComment.trim()) return;
 
         try {
-            const res = await fetch(`http://localhost:5000/api/collection/${uuid}/comment`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/collection/${uuid}/comment`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -224,7 +224,7 @@ export default function Collection({ params: paramsPromise }) {
             }
 
             // Refresh comments
-            const commentsRes = await fetch(`http://localhost:5000/api/collection/${uuid}/comments`, {
+            const commentsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/collection/${uuid}/comments`, {
                 credentials: 'include'
             });
             const commentsData = await commentsRes.json();

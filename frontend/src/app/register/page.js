@@ -13,26 +13,29 @@ export default function Register() {
     useEffect(() => {
         async function fetchProfile() {
             try {
-                const response = await fetch('http://localhost:5000/api/profile', {
-                    credentials: 'include'
+                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/profile`, {
+                    credentials: 'include',
                 });
+    
                 const data = await response.json();
+    
                 if (response.ok) {
                     setEmail(data.email);
                     setUsername(data.username);
-                    window.location.href = '/dashboard';
-                } 
-                    // setError(data.error);
-                    // window.location.href = '/login';
-                    // continue;
-                
+                    window.location.href = '/dashboard'; // Redirect to dashboard if successful
+                } else {
+                    setError(data.error || 'Unable to fetch profile.');
+                    window.location.href = '/login'; // Redirect to login if the fetch fails
+                }
             } catch (err) {
-                setError('Failed to fetch email.');
+                console.error('Error fetching profile:', err);
+                setError('Failed to fetch profile. Please try again later.');
             }
         }
-
-        fetchProfile();
-    }, []);
+    
+        fetchProfile(); // Invoke the function inside useEffect
+    }, []); // Empty dependency array ensures it runs only once
+    
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -40,7 +43,7 @@ export default function Register() {
         setSuccessMessage('');
 
         try {
-            const response = await fetch('http://localhost:5000/api/register', { // Updated URL
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/register`, { // Updated URL
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, username, password }),

@@ -10,7 +10,7 @@ export default function Exhibit({ params }) {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const res = await fetch(`http://localhost:5000/api/exhibit/${uuid}`);
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/exhibit/${uuid}`);
                 if (!res.ok) {
                     throw new Error('Failed to fetch data');
                 }

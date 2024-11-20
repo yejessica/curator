@@ -16,7 +16,7 @@ export default function EditCollection() {
         // Fetch existing collection data
         const fetchCollection = async () => {
             try {
-                const res = await fetch(`http://localhost:5000/api/collection/${uuid}/edit`, {
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/collection/${uuid}/edit`, {
                     credentials: "include"
                 });
 
@@ -71,7 +71,7 @@ export default function EditCollection() {
 
     const handleSubmit = async () => {
         try {
-            const res = await fetch(`http://localhost:5000/api/collection/${uuid}/edit`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/collection/${uuid}/edit`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",

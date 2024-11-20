@@ -17,7 +17,7 @@ export default function CreateCollection() {
     useEffect(() => {
         const checkAuth = async () => {
             try {
-                const res = await fetch('http://localhost:5000/api/check-auth', {
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/check-auth`, {
                     credentials: 'include', // Include cookies in the request
                 });
 
@@ -73,7 +73,7 @@ export default function CreateCollection() {
     // Function to handle form submission
     const handleSubmit = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/create-collection', {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/create-collection`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',  // Include cookies in the request
