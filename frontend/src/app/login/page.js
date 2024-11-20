@@ -14,9 +14,15 @@ export default function Login() {
     useEffect(() => {
         async function fetchProfile() {
             try {
-                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/profile`, {
+                const url = `${process.env.NEXT_PUBLIC_API_URL}/api/profile`;
+                console.log('Fetching profile from URL:', url); // Logs the URL
+
+                const response = await fetch(url, {
                     credentials: 'include'
                 });
+                // const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/profile`, {
+                //     credentials: 'include'
+                // });
                 const data = await response.json();
 
                 if (response.ok && data.email && data.username) {
@@ -40,12 +46,16 @@ export default function Login() {
         setErrorMessage('');
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/login`, {
+            const url = `${process.env.NEXT_PUBLIC_API_URL}/api/login`;
+            console.log('URL being fetched:', url); // Display the URL
+
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password }),
                 credentials: 'include'
             });
+
             const data = await response.json();
 
             if (!response.ok) {
