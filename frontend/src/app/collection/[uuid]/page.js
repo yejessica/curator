@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import Navbar from '../../../components/Navbar';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+
 
 export default function Collection({ params: paramsPromise }) {
     const [uuid, setUuid] = useState(null);
@@ -18,6 +20,8 @@ export default function Collection({ params: paramsPromise }) {
     const [showCommentModal, setShowCommentModal] = useState(false);
     const [newComment, setNewComment] = useState("");
     const [comments, setComments] = useState([]);
+    const router = useRouter();
+
 
     useEffect(() => {
         const unwrapParams = async () => {
@@ -183,6 +187,7 @@ export default function Collection({ params: paramsPromise }) {
                         </div>
                         {/* Buttons */}
                         <div className="flex items-start gap-[15px] w-full p-0 m-0">
+                            
                             <div
                                 role="button"
                                 className="w-[45px] h-[45px] shrink-0 rounded-[16px] bg-[#086788] flex justify-center items-center hover:bg-[#55b0cf]"
@@ -218,6 +223,15 @@ export default function Collection({ params: paramsPromise }) {
                                     />
                                 </svg>
                             </div>
+                            {username === collection_username && (
+                                <button
+                                    className="w-[151px] h-[51px] shrink-0 rounded-[25px] bg-[#086788] text-white text-[20px] font-semibold hover:bg-[#31819c]"
+                                    onClick={() => router.push(`/collection/${uuid}/edit`)} // Make sure to handle `uuid`
+                                >
+                                    Edit
+                                </button>
+                            )}
+                          
 
                         </div>
                     </div>
