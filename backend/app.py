@@ -1023,73 +1023,87 @@ def add_comment(url):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Add tags to an exhibit
-@app.route('/api/exhibit/<exhibit_id>/tag', methods=['POST'])
-def add_tag(exhibit_id):
-    if 'email' not in session:
-        return jsonify({"error": "User not logged in"}), 401
-
-    data = request.get_json()  # Retrieve JSON data from the request body
-    tag_name = data.get('tag_name')  # Extract tag name from the request body
-
-    if not tag_name:
-        return jsonify({'error': 'Tag name is required'}), 400
-
-    # Validate the tag name
-    valid_tags = ['Inspirational', 'Interesting', 'Creative', 'To Buy']
-    if tag_name not in valid_tags:
-        return jsonify({'error': 'Invalid tag name'}), 400
-
-    try:
-        # Get user_id from email
-        user_query = text("SELECT user_id FROM Users WHERE email = :email")
-        user_result = g.conn.execute(user_query, {"email": session['email']}).fetchone()
-        if not user_result:
-            return jsonify({"error": "User not found"}), 404
-
-        user_id = user_result[0]
-
-        # Insert the new tag for the exhibit
-        insert_tag_query = text("""
-            INSERT INTO tags (exhibit_id, name, user_id)
-            VALUES (:exhibit_id, :name, :user_id)
-        """)
-        g.conn.execute(insert_tag_query, {
-            "exhibit_id": exhibit_id,
-            "name": tag_name,
-            "user_id": user_id
-        })
-        g.conn.commit()
-
-        return jsonify({'message': 'Tag added successfully'}), 201
-
-    except Exception as e:
-        g.conn.rollback()  # Rollback on error
-        return jsonify({'error': str(e)}), 500
-    
+# Endpoint to fetch tags for an exhibit
 @app.route('/api/exhibit/<exhibit_id>/tags', methods=['GET'])
-def get_tags_for_exhibit(exhibit_id):
+def get_tags(exhibit_id):
     try:
-        # Get all tags for the exhibit, along with their counts
-        sql = text("""
-            SELECT name, COUNT(*) AS count
-            FROM tags
+        # Query to fetch tag names and their counts for the given exhibit_id
+        query = text("""
+            SELECT name, COUNT(*) as count
+            FROM Tags
             WHERE exhibit_id = :exhibit_id
             GROUP BY name
         """)
-        result = g.conn.execute(sql, {"exhibit_id": exhibit_id}).fetchall()
+        result = g.conn.execute(query, {"exhibit_id": exhibit_id})
+
+        # Convert the query results into a list of dictionaries
+        tags = [{"name": row[0], "count": row[1]} for row in result]
+        return jsonify({"tags": tags}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# Endpoint to add a tag to an exhibit
+@app.route('/api/exhibit/<exhibit_id>/tags', methods=['POST'])
+def add_exhibit_tag(exhibit_id):
+    if 'email' not in session:
+        return jsonify({"error": "User not logged in"}), 401
+
+    data = request.get_json()
+    tag_name = data.get("tag_name")
+    collection_id = data.get("collection_id")  # Get collection_id from the request
+
+    if not tag_name:
+        return jsonify({"error": "Tag name is required"}), 400
+    if not collection_id:
+        return jsonify({"error": "Collection ID is required"}), 400
+
+    try:
+        # Get the user ID from the session
+        email = session['email']
+        user = g.conn.execute(
+            text("SELECT user_id FROM Users WHERE email = :email"),
+            {"email": email}
+        ).fetchone()
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        # Access the user_id using an integer index
+        user_id = user[0]
+
+        # Generate a new UUID for the tag_id
+        tag_id = str(uuid.uuid4())
+
+        # Insert the tag into the Tags table
+        g.conn.execute(
+            text("INSERT INTO Tags (tag_id, name, exhibit_id, collection_id, user_id) VALUES (:tag_id, :name, :exhibit_id, :collection_id, :user_id)"),
+            {
+                "tag_id": tag_id,
+                "name": tag_name,
+                "exhibit_id": exhibit_id,
+                "collection_id": collection_id,
+                "user_id": user_id
+            }
+        )
+        g.conn.commit()  # Commit the transaction
+        return jsonify({"message": "Tag added successfully"}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/collection-id-from-url/<url>', methods=['GET'])
+def get_collection_id_from_url(url):
+    try:
+        # Query the database to get the collection_id using the URL
+        query = text("SELECT collection_id FROM Collections WHERE url = :url")
+        result = g.conn.execute(query, {"url": url}).fetchone()
 
         if not result:
-            return jsonify({'message': 'No tags found for this exhibit'}), 404
+            return jsonify({"error": "Collection not found"}), 404
 
-        # Format the tags into a dictionary with tag names as keys and counts as values
-        tag_counts = {tag[0]: tag[1] for tag in result}
-
-        return jsonify({'tags': tag_counts}), 200
-
+        collection_id = result[0]  # Access collection_id from the result
+        return jsonify({"collection_id": collection_id}), 200
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5000)
