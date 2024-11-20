@@ -14,7 +14,7 @@ import urllib.parse
 
 app = Flask(__name__)
 # CORS(app, supports_credentials=True)
-CORS(app, origins=["https://curator-smoky.vercel.app"])
+CORS(app, origins=["https://curator-smoky.vercel.app"], supports_credentials=True)
 
 
 # Use the provided secret key
