@@ -245,21 +245,9 @@ export default function Collection({ params: paramsPromise }) {
         <div className="bg-background font-helvetica text-white min-h-screen w-fill overflow-x-hidden">
             <Navbar username={username} />
 
-{/* Tag Dropdown and Menu */}
-<div className="mb-4">
-    <label className="text-white font-bold mb-2 block">Select Exhibit:</label>
-    <select
-        className="p-2 rounded bg-[#1F2933] text-white"
-        value={selectedExhibit || ""}
-        onChange={(e) => setSelectedExhibit(e.target.value)}
-    >
-        <option value="" disabled>Select an Exhibit</option>
-        {exhibits.map((exhibit) => (
-            <option key={exhibit.exhibit_id} value={exhibit.exhibit_id}>
-                {exhibit.title}
-            </option>
-        ))}
-    </select>
+
+
+
 
 
 
@@ -409,6 +397,22 @@ export default function Collection({ params: paramsPromise }) {
                         </div>
                     ))}
                 </div>
+
+            {/* Tag Dropdown and Menu */}
+            <div className="mb-4">
+                <label className="text-white font-bold mb-2 block">Select Exhibit:</label>
+                <select
+                    className="p-2 rounded bg-[#1F2933] text-white"
+                    value={selectedExhibit || ""}
+                    onChange={(e) => setSelectedExhibit(e.target.value)}
+                >
+                    <option value="" disabled>Select an Exhibit</option>
+                    {exhibits.map((exhibit) => (
+                        <option key={exhibit.exhibit_id} value={exhibit.exhibit_id}>
+                            {exhibit.title}
+                        </option>
+                    ))}
+                </select>
 
                 <div className="mt-4">
             <label className="text-white font-bold mb-2 block">Add Tag:</label>
