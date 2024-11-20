@@ -822,6 +822,92 @@ def unsave_collection(url):
         return jsonify({"message": "Collection unsaved successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+# Endpoint to fetch comments for a collection
+@app.route('/api/collection/<url>/comments', methods=['GET'])
+def get_comments(url):
+    try:
+        # Get collection_id from URL
+        collection_query = text("SELECT collection_id FROM Collections WHERE url = :url")
+        collection_result = g.conn.execute(collection_query, {"url": url}).fetchone()
+        if not collection_result:
+            return jsonify({"error": "Collection not found"}), 404
+
+        collection_id = collection_result[0]
+
+        # Fetch comments
+        comments_query = text("""
+            SELECT c.comment_id, c.message, c.time, u.username
+            FROM Comments c
+            JOIN Users u ON c.commenter_user_id = u.user_id
+            WHERE c.collection_id = :collection_id
+            ORDER BY c.time DESC
+        """)
+        comments = g.conn.execute(comments_query, {"collection_id": collection_id}).fetchall()
+
+        comments_list = [
+            {
+                "comment_id": row[0],
+                "message": row[1],
+                "time": row[2],
+                "username": row[3]
+            }
+            for row in comments
+        ]
+
+        return jsonify({"comments": comments_list}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# Endpoint to add a comment to a collection
+@app.route('/api/collection/<url>/comment', methods=['POST'])
+def add_comment(url):
+    if 'email' not in session:
+        return jsonify({"error": "User not logged in"}), 401
+
+    data = request.get_json()
+    message = data.get('message')
+
+    if not message:
+        return jsonify({"error": "Message cannot be empty"}), 400
+
+    email = session['email']
+
+    try:
+        # Get user_id from email
+        user_query = text("SELECT user_id FROM Users WHERE email = :email")
+        user_result = g.conn.execute(user_query, {"email": email}).fetchone()
+        if not user_result:
+            return jsonify({"error": "User not found"}), 404
+
+        commenter_user_id = user_result[0]
+
+        # Get collection_id and owner_id from URL
+        collection_query = text("SELECT collection_id, user_id FROM Collections WHERE url = :url")
+        collection_result = g.conn.execute(collection_query, {"url": url}).fetchone()
+        if not collection_result:
+            return jsonify({"error": "Collection not found"}), 404
+
+        collection_id = collection_result[0]
+        collection_owner_id = collection_result[1]
+
+        # Insert comment
+        insert_comment_query = text("""
+            INSERT INTO Comments (comment_id, message, time, collection_id, collection_owner_id, commenter_user_id)
+            VALUES (:comment_id, :message, NOW(), :collection_id, :collection_owner_id, :commenter_user_id)
+        """)
+        g.conn.execute(insert_comment_query, {
+            "comment_id": str(uuid.uuid4()),
+            "message": message,
+            "collection_id": collection_id,
+            "collection_owner_id": collection_owner_id,
+            "commenter_user_id": commenter_user_id
+        })
+        g.conn.commit()
+
+        return jsonify({"message": "Comment added successfully"}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5000)

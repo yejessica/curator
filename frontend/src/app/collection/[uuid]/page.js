@@ -15,6 +15,9 @@ export default function Collection({ params: paramsPromise }) {
     const [email, setEmail] = useState(null);
     const [collection_username, setCollectionUsername] = useState(null);
     const [isSaved, setIsSaved] = useState(false);
+    const [showCommentModal, setShowCommentModal] = useState(false);
+    const [newComment, setNewComment] = useState("");
+    const [comments, setComments] = useState([]);
 
     useEffect(() => {
         const unwrapParams = async () => {
@@ -79,6 +82,13 @@ export default function Collection({ params: paramsPromise }) {
                 });
                 const savedData = await savedRes.json();
                 setIsSaved(savedData.is_saved);
+
+                // Fetch comments
+                const commentsRes = await fetch(`http://localhost:5000/api/collection/${uuid}/comments`, {
+                    credentials: 'include'
+                });
+                const commentsData = await commentsRes.json();
+                setComments(commentsData.comments || []);
             } catch (error) {
                 setError(error.message);
             }
@@ -122,6 +132,34 @@ export default function Collection({ params: paramsPromise }) {
         }
     };
 
+    const handleAddComment = async () => {
+        if (!newComment.trim()) return;
+
+        try {
+            const res = await fetch(`http://localhost:5000/api/collection/${uuid}/comment`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ message: newComment }),
+            });
+
+            if (!res.ok) {
+                throw new Error('Failed to add comment');
+            }
+
+            // Refresh comments
+            const commentsRes = await fetch(`http://localhost:5000/api/collection/${uuid}/comments`, {
+                credentials: 'include'
+            });
+            const commentsData = await commentsRes.json();
+            setComments(commentsData.comments || []);
+            setNewComment("");
+            setShowCommentModal(false);
+        } catch (error) {
+            setError(error.message);
+        }
+    };
+
     if (error) {
         return <div>Error: {error}</div>;
     }
@@ -149,7 +187,11 @@ export default function Collection({ params: paramsPromise }) {
                             >
                                 <Image src="/like.svg" width={32} height={32} alt="Like Icon" />
                             </div>
-                            <div className="w-[45px] h-[45px] shrink-0 rounded-[16px] bg-[#086788] flex justify-center items-center">
+                            <div
+                                role="button"
+                                className="w-[45px] h-[45px] shrink-0 rounded-[16px] bg-[#086788] flex justify-center items-center"
+                                onClick={() => setShowCommentModal(true)}
+                            >
                                 <Image src="/comment.svg" width={32} height={32} alt="Comment Icon" />
                             </div>
                             <div
@@ -219,7 +261,51 @@ export default function Collection({ params: paramsPromise }) {
                         </div>
                     ))}
                 </div>
+
+                <div className="mt-8">
+                    <h2 className="text-white font-helvetica text-2xl font-bold mb-4">Comments</h2>
+                    {comments.length === 0 ? (
+                        <p className="text-[#BDC1C6]">No comments yet. Be the first!</p>
+                    ) : (
+                        comments.map((comment) => (
+                            <div key={comment.comment_id} className="p-4 bg-[#1F2933] rounded-lg mb-4">
+                                <p className="text-white font-bold">{comment.username}</p>
+                                <p className="text-[#BDC1C6]">{new Date(comment.time).toLocaleString()}</p>
+                                <p className="text-white mt-2">{comment.message}</p>
+                            </div>
+                        ))
+                    )}
+                </div>
             </div>
+
+            {showCommentModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+                        <h3 className="text-xl font-bold mb-4">Add a Comment</h3>
+                        <textarea
+                            className="w-full p-2 border border-gray-300 rounded-md mb-4 text-black"
+                            rows="4"
+                            placeholder="Write your comment..."
+                            value={newComment}
+                            onChange={(e) => setNewComment(e.target.value)}
+                        />
+                        <div className="flex justify-end">
+                            <button
+                                className="bg-red-500 text-white px-4 py-2 rounded-md mr-2"
+                                onClick={() => setShowCommentModal(false)}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="bg-blue-500 text-white px-4 py-2 rounded-md"
+                                onClick={handleAddComment}
+                            >
+                                Comment
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
