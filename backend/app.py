@@ -7,6 +7,8 @@ import secrets
 import uuid
 import random
 import string
+import re
+
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
@@ -463,15 +465,41 @@ def create_collection():
 
             elif exhibit_format == "Videos":
                 video_id = str(uuid.uuid4())
+                video_url = exhibit.get('url', '')
+                def extract_video_id(url):
+                    # Check if the URL is from youtu.be or youtube.com
+                    if 'youtu.be' in url:
+                        # Regular expression to extract video ID from youtu.be URL
+                        pattern = r'(?<=youtu\.be/)([^?]+)'
+                    elif 'youtube.com' in url:
+                        # Regular expression to extract video ID from youtube.com URL
+                        pattern = r'(?<=\?v=)([^&]+)'
+                    else:
+                        return None  # Return None if the URL format is not recognized
+
+                    match = re.search(pattern, url)
+                    
+                    if match:
+                        return match.group(0)
+                    else:
+                        return None
+                
+                youtubeUrl = extract_video_id(video_url)
+                if (youtubeUrl): #is a youtube url
+                    video_url = youtubeUrl
+
+                print(video_url)
                 insert_video_query = text("INSERT INTO videos (video_id, exhibit_id, url) VALUES (:video_id, :exhibit_id, :url)")
                 g.conn.execute(insert_video_query, {
                     "video_id": video_id,
                     "exhibit_id": exhibit_uuid,
-                    "url": exhibit.get('url', '')
+                    "url": video_url
                 })
 
             elif exhibit_format == "Embeds":
                 embed_id = str(uuid.uuid4())
+                
+
                 insert_embed_query = text("INSERT INTO embeds (embed_id, exhibit_id, url) VALUES (:embed_id, :exhibit_id, :url)")
                 g.conn.execute(insert_embed_query, {
                     "embed_id": embed_id,
@@ -611,12 +639,43 @@ def update_collection(url):
                 g.conn.execute(insert_image_query, {"image_id": str(uuid.uuid4()), "exhibit_id": exhibit_id, "url": image_url})
 
             elif exhibit_format == "Videos":
-                video_url = exhibit.get("url", "")
-                insert_video_query = text("INSERT INTO Videos (video_id, exhibit_id, url) VALUES (:video_id, :exhibit_id, :url)")
-                g.conn.execute(insert_video_query, {"video_id": str(uuid.uuid4()), "exhibit_id": exhibit_id, "url": video_url})
+                # video_url = exhibit.get("url", "")
+                # insert_video_query = text("INSERT INTO Videos (video_id, exhibit_id, url) VALUES (:video_id, :exhibit_id, :url)")
+                # g.conn.execute(insert_video_query, {"video_id": str(uuid.uuid4()), "exhibit_id": exhibit_id, "url": video_url})
+                video_url = exhibit.get('url', '')
+                def extract_video_id(url):
+                    # Check if the URL is from youtu.be or youtube.com
+                    if 'youtu.be' in url:
+                        # Regular expression to extract video ID from youtu.be URL
+                        pattern = r'(?<=youtu\.be/)([^?]+)'
+                    elif 'youtube.com' in url:
+                        # Regular expression to extract video ID from youtube.com URL
+                        pattern = r'(?<=\?v=)([^&]+)'
+                    else:
+                        return None  # Return None if the URL format is not recognized
+
+                    match = re.search(pattern, url)
+                    
+                    if match:
+                        return match.group(0)
+                    else:
+                        return None
+                
+                youtubeUrl = extract_video_id(video_url)
+                if (youtubeUrl): #is a youtube url
+                    video_url = youtubeUrl
+
+                print(video_url)
+                insert_video_query = text("INSERT INTO videos (video_id, exhibit_id, url) VALUES (:video_id, :exhibit_id, :url)")
+                g.conn.execute(insert_video_query, {
+                    "video_id": str(uuid.uuid4()),
+                    "exhibit_id": exhibit_id,
+                    "url": video_url
+                })
 
             elif exhibit_format == "Embeds":
                 embed_url = exhibit.get("url", "")
+                
                 insert_embed_query = text("INSERT INTO Embeds (embed_id, exhibit_id, url) VALUES (:embed_id, :exhibit_id, :url)")
                 g.conn.execute(insert_embed_query, {"embed_id": str(uuid.uuid4()), "exhibit_id": exhibit_id, "url": embed_url})
 
