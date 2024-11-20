@@ -19,6 +19,8 @@ export default function Collection({ params: paramsPromise }) {
     const [collection_username, setCollectionUsername] = useState(null);
     const [isSaved, setIsSaved] = useState(false);
     const [showCommentModal, setShowCommentModal] = useState(false);
+    const [showTagModal, setShowTagModal] = useState(false);
+    const [newTag, setNewTag] = useState("");
     const [newComment, setNewComment] = useState("");
     const [comments, setComments] = useState([]);
     const [selectedExhibit, setSelectedExhibit] = useState(""); // Default to empty string
@@ -157,12 +159,13 @@ export default function Collection({ params: paramsPromise }) {
                 throw new Error('Failed to add tag');
             }
     
-            alert(`Tag '${tagName}' added to exhibit ${exhibitId}!`);
+            // alert(`Tag '${tagName}' added to exhibit ${exhibitId}!`);
     
             // Refresh tags for the exhibit
             const tagRes = await fetch(`http://localhost:5000/api/exhibit/${exhibitId}/tags`);
             const tagData = await tagRes.json();
             setTags((prevTags) => ({ ...prevTags, [exhibitId]: tagData.tags || [] }));
+            setShowTagModal(false);
         } catch (error) {
             console.error('Error adding tag:', error);
             alert('Failed to add tag.');
@@ -287,6 +290,13 @@ export default function Collection({ params: paramsPromise }) {
                                     <path d="M26 5.99832V27.9983C26 28.797 25.1099 29.2734 24.4453 28.8304L16 23.2013L7.5547 28.8304C6.92179 29.2523 6.08426 28.8403 6.00593 28.1102L6 27.9983V5.99832C6 4.34147 7.34315 2.99832 9 2.99832H23C24.6569 2.99832 26 4.34147 26 5.99832ZM8 26.1303L15.4453 21.1663C15.7812 20.9423 16.2188 20.9423 16.5547 21.1663L24 26.1293V5.99832C24 5.48549 23.614 5.06281 23.1166 5.00505L23 4.99832H9C8.44772 4.99832 8 5.44604 8 5.99832V26.1303Z" />
                                 </svg>
                             </div>
+                            <div
+                                role="button"
+                                className="w-[45px] h-[45px] shrink-0 rounded-[16px] bg-[#086788] flex justify-center items-center hover:bg-[#55b0cf]"
+                                onClick={() => setShowTagModal(true)}
+                            >
+                                <Image src="/tag.svg" width={32} height={32} alt="Comment Icon" />
+                            </div>
                             {username === collection_username && (
                                 <button
                                     className="w-[151px] h-[51px] shrink-0 rounded-[25px] bg-[#086788] text-white text-[20px] font-semibold hover:bg-[#31819c]"
@@ -384,7 +394,7 @@ export default function Collection({ params: paramsPromise }) {
                             {/* Display Tags */}
                             {tags[exhibit.exhibit_id] && tags[exhibit.exhibit_id].length > 0 && (
                                 <div className="mt-2">
-                                    <p className="text-[#BDC1C6] font-helvetica text-sm">Tags:</p>
+                                    {/* <p className="text-[#BDC1C6] font-helvetica text-sm">Tags:</p> */}
                                     <div className="flex flex-wrap gap-2">
                                         {tags[exhibit.exhibit_id].map((tag, index) => (
                                             <span key={index} className="px-2 py-1 bg-[#2D3748] text-white text-xs rounded">
@@ -398,63 +408,7 @@ export default function Collection({ params: paramsPromise }) {
                     ))}
                 </div>
 
-            {/* Tag Dropdown and Menu */}
-            <div className="mb-4">
-                <label className="text-white font-bold mb-2 block">Select Exhibit:</label>
-                <select
-                    className="p-2 rounded bg-[#1F2933] text-white"
-                    value={selectedExhibit || ""}
-                    onChange={(e) => setSelectedExhibit(e.target.value)}
-                >
-                    <option value="" disabled>Select an Exhibit</option>
-                    {exhibits.map((exhibit) => (
-                        <option key={exhibit.exhibit_id} value={exhibit.exhibit_id}>
-                            {exhibit.title}
-                        </option>
-                    ))}
-                </select>
-
-                <div className="mt-4">
-            <label className="text-white font-bold mb-2 block">Add Tag:</label>
-            <div className="space-x-2">
-                <button
-                    className="p-2 bg-blue-500 rounded text-white"
-                    onClick={() => handleTagAddition(selectedExhibit, 'Great')}
-                >
-                    Great
-                </button>
-                <button
-                    className="p-2 bg-green-500 rounded text-white"
-                    onClick={() => handleTagAddition(selectedExhibit, 'Inspiration')}
-                >
-                    Inspiration
-                </button>
-                <button
-                    className="p-2 bg-yellow-500 rounded text-white"
-                    onClick={() => handleTagAddition(selectedExhibit, 'View Later')}
-                >
-                    View Later
-                </button>
-            </div>
-        </div>
-
-
-                {/* Comments Section */}
-                <div className="mt-4">
-                    <h2 className="text-white font-helvetica text-2xl font-bold mb-4">Comments</h2>
-                    {comments.length === 0 ? (
-                        <p className="text-[#BDC1C6]">No comments yet. Be the first!</p>
-                    ) : (
-                        comments.map((comment) => (
-                            <div key={comment.comment_id} className="p-4 bg-[#1F2933] rounded-lg mb-4">
-                                <p className="text-white font-bold">{comment.username}</p>
-                                <p className="text-[#BDC1C6]">{new Date(comment.time).toLocaleString()}</p>
-                                <p className="text-white mt-2">{comment.message}</p>
-                            </div>
-                        ))
-                    )}
-                </div>
-            </div>
+            
 
         </div>
 
@@ -465,6 +419,7 @@ export default function Collection({ params: paramsPromise }) {
                         <h3 className="text-xl font-bold mb-4">Add a Comment</h3>
                         <textarea
                             className="w-full p-2 border border-gray-300 rounded-md mb-4 text-white bg-[#696b6c]"
+                            maxLength="255"
                             rows="4"
                             placeholder="Write your comment..."
                             value={newComment}
@@ -478,6 +433,56 @@ export default function Collection({ params: paramsPromise }) {
                                 Comment
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {showTagModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-[#12171D] p-6 rounded-lg shadow-lg max-w-sm w-full">
+                        <h3 className="text-xl font-bold mb-4">Add a Tag</h3>
+                        {/* Tag Dropdown and Menu */}
+                        <div className="mb-4">  
+                            <label className="text-white font-bold mb-2 block">Select Exhibit:</label>
+                            <select
+                                className="p-2 rounded bg-[#1F2933] text-white"
+                                value={selectedExhibit || ""}
+                                onChange={(e) => setSelectedExhibit(e.target.value)}
+                            >
+                                <option value="" disabled>Select an Exhibit</option>
+                                {exhibits.map((exhibit) => (
+                                    <option key={exhibit.exhibit_id} value={exhibit.exhibit_id}>
+                                        {exhibit.title}
+                                    </option>
+                                ))}
+                            </select>
+
+                            <div className="mt-4">
+                                <label className="text-white font-bold mb-2 block">Add Tag:</label>
+                                <input
+                                    maxLength="15"
+                                    type="text"
+                                    placeholder="Tag"
+                                    className="w-full p-2 border border-gray-300 rounded-md bg-[#696b6c]"
+                                    value={newTag}
+                                    onChange={(e) => setNewTag(e.target.value)}
+                                />
+
+                            </div>
+                            <br></br>
+                            <div className="flex justify-end">
+                                <button className="bg-[#8c2439] hover:bg-[#b25366] text-white px-4 py-2 rounded-md mr-2" onClick={() => setShowTagModal(false)}>
+                                    Close
+                                </button>
+                                <button className="bg-[#086788] hover:bg-[#5099b2] text-white px-4 py-2 rounded-md" onClick={() => handleTagAddition(selectedExhibit, newTag)}>
+                                    Tag
+                                </button>
+                            </div>
+                            
+
+                            
+                        </div>
+                        
                     </div>
                 </div>
             )}

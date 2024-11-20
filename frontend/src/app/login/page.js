@@ -1,12 +1,39 @@
 "use client";
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
+    // const [email, setEmail] = useState('');
+    const [username, setUsername] = useState('');
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        async function fetchProfile() {
+            try {
+                const response = await fetch('http://localhost:5000/api/profile', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+
+                if (response.ok && data.email && data.username) {
+                    setEmail(data.email);
+                    setUsername(data.username);
+                    window.location.href = '/dashboard'; // Redirect to the dashboard
+                } else {
+                    setError('Failed to load profile information.');
+                }
+            } catch (err) {
+                setError('Failed to fetch profile.');
+            }
+        }
+
+        fetchProfile();
+    }, []);
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();

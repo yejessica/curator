@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from 'react';
+// import { useState } from 'react';
+import { useEffect, useState } from 'react';
+
 
 export default function Register() {
     const [email, setEmail] = useState('');
@@ -8,6 +10,29 @@ export default function Register() {
     const [password, setPassword] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
+    useEffect(() => {
+        async function fetchProfile() {
+            try {
+                const response = await fetch('http://localhost:5000/api/profile', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    setEmail(data.email);
+                    setUsername(data.username);
+                    window.location.href = '/dashboard';
+                } 
+                    // setError(data.error);
+                    // window.location.href = '/login';
+                    // continue;
+                
+            } catch (err) {
+                setError('Failed to fetch email.');
+            }
+        }
+
+        fetchProfile();
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
