@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 
 
 export default function Collection({ params: paramsPromise }) {
+    const router = useRouter();
     const [uuid, setUuid] = useState(null);
     const [exhibits, setExhibits] = useState([]);
     const [title, setTitle] = useState(null);
