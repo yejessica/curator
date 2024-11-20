@@ -76,7 +76,7 @@ export default function Dashboard() {
                         New
                     </button>
                 </div>
-                <p className='text-xl'>Click on a collection to edit it.</p>
+                <p className='text-xl'>Click on a collection to see it. There is an option to edit on the collections page.</p>
 
                 <div className="flex flex-wrap justify-start gap-10 border-[#ffffff]">
                     {collections.map((collection, index) => (
@@ -89,14 +89,18 @@ export default function Dashboard() {
                             <p className="w-[328px] h-[35px] text-white font-helvetica text-[24px] font-bold absolute left-[35px] top-[40px]">
                                 {collection.title}
                             </p>
-                            <div className="absolute left-[21.5%] top-[129px] text-[#ABABAB] text-center font-helvetica text-xl font-light">
-                                <p className="text-[20px]">{collection.views}</p>
-                                <p className="text-[15px] font-semibold">VIEWS</p>
+                            
+                            <div>
+                                <div className="absolute left-[21.5%] top-[129px] text-[#ABABAB] text-center font-helvetica text-xl font-light">
+                                    <p className="text-[20px]">{collection.views}</p>
+                                    <p className="text-[15px] font-semibold">VIEWS</p>
+                                </div>
+                                <div className="absolute left-[71.5%] top-[129px] text-[#ABABAB] text-center font-helvetica text-xl font-light">
+                                    <p className="text-[20px]">{collection.likes}</p>
+                                    <p className="text-[15px] font-semibold">LIKES</p>
+                                </div>
                             </div>
-                            <div className="absolute left-[71.5%] top-[129px] text-[#ABABAB] text-center font-helvetica text-xl font-light">
-                                <p className="text-[20px]">{collection.likes}</p>
-                                <p className="text-[15px] font-semibold">LIKES</p>
-                            </div>
+                            
 
                             <div className="absolute top-[120px] left-1/2 transform -translate-x-1/2 h-[80px] bg-[#cfcfcf1a] w-px"></div>
                             <div className="absolute top-[120px] left-1/2 transform -translate-x-1/2 w-full h-px bg-[#cfcfcf1a]"></div>
