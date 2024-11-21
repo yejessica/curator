@@ -410,7 +410,20 @@ export default function Collection({ params: paramsPromise }) {
                         </div>
                     ))}
                 </div>
-
+                <div className="mt-8">
+                    <h2 className="text-white font-helvetica text-2xl font-bold mb-4">Comments</h2>
+                    {comments.length === 0 ? (
+                        <p className="text-[#BDC1C6]">No comments yet. Be the first!</p>
+                    ) : (
+                        comments.map((comment) => (
+                            <div key={comment.comment_id} className="p-4 bg-[#1F2933] rounded-lg mb-4">
+                                <p className="text-white font-bold">{comment.username}</p>
+                                <p className="text-[#BDC1C6]">{new Date(comment.time).toLocaleString()}</p>
+                                <p className="text-white mt-2">{comment.message}</p>
+                            </div>
+                        ))
+                    )}
+                </div>
             
 
         </div>
