@@ -69,7 +69,7 @@ def verify_password(password: str, hashed: str) -> bool:
 @app.before_request
 def before_request():
     try:
-        print("Session contents:", session)
+        print("Session before request:", dict(session))
         g.conn = engine.connect()
         # Print the logged-in user's email from the session, if it exists
         if 'email' in session:
@@ -77,7 +77,7 @@ def before_request():
         else:
             print("No user is currently logged in.")
     except:
-        print("Session after request:", session)
+        print("Session after request:", dict(session))
         print("Uh oh, problem connecting to the database")
         import traceback
         traceback.print_exc()
