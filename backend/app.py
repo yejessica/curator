@@ -89,17 +89,6 @@ def verify_password(password: str, hashed: str) -> bool:
 
 @app.before_request
 def before_request():
-    # Handle preflight CORS requests
-    if request.method == 'OPTIONS':
-        # Respond to preflight CORS requests
-        response = jsonify({'status': 'Preflight OK'})
-        response.headers.add("Access-Control-Allow-Origin", request.headers.get("Origin", "*"))
-        response.headers.add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-        response.headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization")
-        response.headers.add("Access-Control-Allow-Credentials", "true")
-        return response, 200
-
-    # Handle regular requests
     try:
         print("Session before request:", dict(session))
         g.conn = engine.connect()
@@ -108,13 +97,12 @@ def before_request():
             print(f"Logged in as: {session['email']}")
         else:
             print("No user is currently logged in.")
-    except Exception as e:
+    except:
         print("Session after request:", dict(session))
         print("Uh oh, problem connecting to the database")
         import traceback
         traceback.print_exc()
         g.conn = None
-
 
 @app.teardown_request
 def teardown_request(exception):
