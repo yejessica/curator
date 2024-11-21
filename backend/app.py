@@ -10,19 +10,19 @@ import random
 import string
 import re
 import urllib.parse
-import requests
+# import requests
 
-base_url = 'https://34.148.247.137:5000'
-paths = ['/api/register','/api/login','/api/logout', '/api/profile','/api/secure-data','/api/current-email','/api/all-user-collections','/api/collection/<url>', '/api/exhibit/<uuid>','/api/check-auth','/api/create-collection','/api/collection/<url>/edit', '/api/collection/<url>/edit', '/api/collection/<url>/increment-views', '/api/collection/<url>/like''/api/collection/<url>/save', '/api/collection/<url>/is-saved','/api/saved-collections','/api/collection/<url>/unsave','/api/collection/<url>/comments', '/api/collection/<url>/comment',  '/api/exhibit/<exhibit_id>/tags','/api/collection-id-from-url/<url>' ]  # Example paths
+# base_url = 'https://34.148.247.137:5000'
+# paths = ['/api/register','/api/login','/api/logout', '/api/profile','/api/secure-data','/api/current-email','/api/all-user-collections','/api/collection/<url>', '/api/exhibit/<uuid>','/api/check-auth','/api/create-collection','/api/collection/<url>/edit', '/api/collection/<url>/edit', '/api/collection/<url>/increment-views', '/api/collection/<url>/like''/api/collection/<url>/save', '/api/collection/<url>/is-saved','/api/saved-collections','/api/collection/<url>/unsave','/api/collection/<url>/comments', '/api/collection/<url>/comment',  '/api/exhibit/<exhibit_id>/tags','/api/collection-id-from-url/<url>' ]  # Example paths
 
-for path in paths:
-    url = base_url + path
-    try:
-        response = requests.get(url, verify=False)  # If you want to skip SSL verification
-        print(f"Response from {url}: {response.status_code}")
-        # Handle the response data
-    except requests.exceptions.RequestException as e:
-        print(f"Error requesting {url}: {e}")
+# for path in paths:
+#     url = base_url + path
+#     try:
+#         response = requests.get(url, verify=False)  # If you want to skip SSL verification
+#         print(f"Response from {url}: {response.status_code}")
+#         # Handle the response data
+#     except requests.exceptions.RequestException as e:
+#         print(f"Error requesting {url}: {e}")
 
 
 
