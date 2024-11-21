@@ -1,7 +1,8 @@
 import os
 from flask import Flask, request, jsonify, session, g
 from sqlalchemy import create_engine, text
-import bcrypt
+import hashlib
+import base64
 from flask_cors import CORS
 import secrets
 import uuid
@@ -14,12 +15,18 @@ import urllib.parse
 
 app = Flask(__name__)
 # CORS(app, supports_credentials=True)
-CORS(app, origins=["https://curator-smoky.vercel.app"], supports_credentials=True)
+CORS(app, supports_credentials=True, origins="*")
+
+app.config['SESSION_COOKIE_NAME'] = 'flask_session'
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SECURE'] = True     # Only for HTTPS
+app.config['SESSION_COOKIE_SAMESITE'] = 'None'  # Allow cross-origin cookies
+
 
 
 # Use the provided secret key
-app.secret_key = secrets.token_hex(32).encode('utf-8')
-# app.secret_key = b'4b629ea0a2f866fd344b0c8b2371c538d9ffab2283595e05d3cece580328fe1b'
+# app.secret_key = secrets.token_hex(32).encode('utf-8')
+app.secret_key = b'4b629ea0a2f866fd344b0c8b2371c538d9ffab2283595e05d3cece580328fe1b'
 
 DB_USER = "jj3390"
 DB_PASSWORD = "quesadillas"
@@ -29,9 +36,46 @@ DATABASEURI = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_SERVER}/w4111"
 app.config['DB_ENGINE'] = create_engine(DATABASEURI)
 engine = create_engine(DATABASEURI)
 
+def hash_password(password: str) -> str:
+    salt = secrets.token_bytes(16)  # Generate a 16-byte salt
+    hashed_password = hashlib.scrypt(
+        password.encode('utf-8'),
+        salt=salt,
+        n=16384,  # CPU/memory cost factor
+        r=8,      # Block size
+        p=1       # Parallelization factor
+    )
+    # Encode the salt and hashed password in base64 for storage
+    return f"{base64.b64encode(salt).decode()}${base64.b64encode(hashed_password).decode()}"
+
+
+def verify_password(password: str, hashed: str) -> bool:
+    try:
+        # Split the stored hash into salt and hashed password
+        salt_b64, hashed_b64 = hashed.split('$')
+        salt = base64.b64decode(salt_b64)
+        stored_hash = base64.b64decode(hashed_b64)
+
+        # Hash the provided password with the same salt
+        test_hash = hashlib.scrypt(
+            password.encode('utf-8'),
+            salt=salt,
+            n=16384,
+            r=8,
+            p=1
+        )
+
+        # Compare the stored hash with the newly computed hash
+        return test_hash == stored_hash
+    except Exception as e:
+        print(f"Error verifying password: {e}")
+        return False
+
+
 @app.before_request
 def before_request():
     try:
+        print("Session before request:", dict(session))
         g.conn = engine.connect()
         # Print the logged-in user's email from the session, if it exists
         if 'email' in session:
@@ -39,6 +83,7 @@ def before_request():
         else:
             print("No user is currently logged in.")
     except:
+        print("Session after request:", dict(session))
         print("Uh oh, problem connecting to the database")
         import traceback
         traceback.print_exc()
@@ -98,7 +143,7 @@ def register():
             return jsonify({"error": "Email is already registered."}), 409
 
         # Hash the password
-        hashed_password = bcrypt.hashpw(cleaned_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        hashed_password = hash_password(cleaned_password)
 
         # Create the uuid
         random_uuid = uuid.uuid4()
@@ -143,7 +188,7 @@ def login():
         db_password = user[3]  # Assuming the password is the 4th column
         username = user[1]
         # print(username)
-        if not bcrypt.checkpw(password.encode('utf-8'), db_password.encode('utf-8')):
+        if not verify_password(password, db_password):
             return jsonify({"error": "Incorrect password."}), 401
 
         # Store the user's email in the session
