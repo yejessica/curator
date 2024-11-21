@@ -17,6 +17,12 @@ app = Flask(__name__)
 # CORS(app, supports_credentials=True)
 CORS(app, supports_credentials=True, origins="*")
 
+app.config['SESSION_COOKIE_NAME'] = 'flask_session'
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SECURE'] = True     # Only for HTTPS
+app.config['SESSION_COOKIE_SAMESITE'] = 'None'  # Allow cross-origin cookies
+
+
 
 # Use the provided secret key
 # app.secret_key = secrets.token_hex(32).encode('utf-8')
