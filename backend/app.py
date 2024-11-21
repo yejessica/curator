@@ -19,8 +19,8 @@ CORS(app, origins=["https://curator-smoky.vercel.app"], supports_credentials=Tru
 
 
 # Use the provided secret key
-app.secret_key = secrets.token_hex(32).encode('utf-8')
-# app.secret_key = b'4b629ea0a2f866fd344b0c8b2371c538d9ffab2283595e05d3cece580328fe1b'
+# app.secret_key = secrets.token_hex(32).encode('utf-8')
+app.secret_key = b'4b629ea0a2f866fd344b0c8b2371c538d9ffab2283595e05d3cece580328fe1b'
 
 DB_USER = "jj3390"
 DB_PASSWORD = "quesadillas"
