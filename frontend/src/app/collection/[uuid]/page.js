@@ -290,13 +290,16 @@ export default function Collection({ params: paramsPromise }) {
                                     <path d="M26 5.99832V27.9983C26 28.797 25.1099 29.2734 24.4453 28.8304L16 23.2013L7.5547 28.8304C6.92179 29.2523 6.08426 28.8403 6.00593 28.1102L6 27.9983V5.99832C6 4.34147 7.34315 2.99832 9 2.99832H23C24.6569 2.99832 26 4.34147 26 5.99832ZM8 26.1303L15.4453 21.1663C15.7812 20.9423 16.2188 20.9423 16.5547 21.1663L24 26.1293V5.99832C24 5.48549 23.614 5.06281 23.1166 5.00505L23 4.99832H9C8.44772 4.99832 8 5.44604 8 5.99832V26.1303Z" />
                                 </svg>
                             </div>
-                            <div
+                            {username === collection_username && (
+                                <div
                                 role="button"
                                 className="w-[45px] h-[45px] shrink-0 rounded-[16px] bg-[#086788] flex justify-center items-center hover:bg-[#55b0cf]"
                                 onClick={() => setShowTagModal(true)}
-                            >
-                                <Image src="/tag.svg" width={32} height={32} alt="Comment Icon" />
-                            </div>
+                                >
+                                    <Image src="/tag.svg" width={32} height={32} alt="Comment Icon" />
+                                </div>
+                            )}
+                            
                             {username === collection_username && (
                                 <button
                                     className="w-[151px] h-[51px] shrink-0 rounded-[25px] bg-[#086788] text-white text-[20px] font-semibold hover:bg-[#31819c]"
