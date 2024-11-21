@@ -10,6 +10,10 @@ import random
 import string
 import re
 import urllib.parse
+import requests
+
+
+response = requests.get('https://34.148.247.137:5000/*', verify=False)
 
 
 
@@ -21,6 +25,8 @@ app.config['SESSION_COOKIE_NAME'] = 'flask_session'
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SECURE'] = True     # Only for HTTPS
 app.config['SESSION_COOKIE_SAMESITE'] = 'None'  # Allow cross-origin cookies
+
+
 
 
 
